@@ -62,12 +62,10 @@ export class PawnValidator implements MoveValidator {
       }
 
       // 2. Captura Diagonal Multidimensional
-      // Caso Lateral: Anda 1 no Z, mantém Y estático, desloca 1 para o lado em X
-      const isLateralQuantumCapture = Math.abs(dx) === 1 && dy === 0;
-      // Caso Frontal: Anda 1 no Z e avança 1 para frente em Y, mantendo o X estático
-      const isFrontalQuantumCapture = dx === 0 && dy === directionY;
+      // Caso Diagonal Frontal: Anda 1 no Z, avança 1 para frente em Y e 1 para o lado em X
+      const isDiagonalFrontalQuantumCapture = Math.abs(dx) === 1 && dy === directionY;
 
-      if (isLateralQuantumCapture || isFrontalQuantumCapture) {
+      if (isDiagonalFrontalQuantumCapture) {
         if (!isDestinationEmpty && targetPiece.color !== piece.color) {
           return true;
         }

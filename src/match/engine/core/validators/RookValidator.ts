@@ -10,14 +10,13 @@ export class RookValidator implements MoveValidator {
     const dy = Math.abs(to.y - from.y);
     const dz = Math.abs(to.z - from.z);
 
-    // Para ser uma linha reta pura, a peça só pode se mover em um eixo por vez.
-    // Logo, os outros dois eixos obrigatoriamente precisam ter variação ZERO.
-    const movedInX = dx > 0 && dy === 0 && dz === 0;
-    const movedInY = dx === 0 && dy > 0 && dz === 0;
-    const movedInZ = dx === 0 && dy === 0 && dz > 0;
+    const isClassicX = dx > 0 && dy === 0 && dz === 0;
+    const isClassicY = dx === 0 && dy > 0 && dz === 0;
+    const isHyperX = dx === dz && dy === 0 && dx > 0;
+    const isHyperY = dy === dz && dx === 0 && dy > 0;
 
-    if (!movedInX && !movedInY && !movedInZ) {
-      throw new Error('A Torre só pode se mover em linhas retas unidimensionais (eixos X, Y ou Z).');
+    if (!(isClassicX || isClassicY || isHyperX || isHyperY)) {
+      throw new Error('A Torre só pode se mover em retas 2D (X ou Y) ou em diagonais dimensionais (XZ ou YZ). Pulos puramente verticais são proibidos.');
     }
 
     // --- VERIFICAÇÃO DE OBSTRUÇÃO DE CAMINHO (COLISÕES DA TORRE) ---

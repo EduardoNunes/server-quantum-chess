@@ -19,15 +19,12 @@ export class BishopValidator implements MoveValidator {
     // Diagonal clássica 2D (mesmo tabuleiro)
     const isClassicDiagonal = dx === dy && dz === 0 && dx > 0;
 
-    // Diagonal quântica planar (muda x e z, ou y e z na mesma proporção)
-    const isPlaneQuantumDiagonal = (dx === dz && dy === 0 && dx > 0) || (dy === dz && dx === 0 && dy > 0);
-
     // Hiperdiagonal espacial pura (muda x, y e z na mesmíssima proporção ao mesmo tempo)
     // Permite saltar múltiplas dimensões de uma vez (ex: z:0 para z:3, desde que ande 3 em X e 3 em Y)
     const isHyperDiagonal = dx === dy && dy === dz && dx > 0;
 
-    if (!isClassicDiagonal && !isPlaneQuantumDiagonal && !isHyperDiagonal) {
-      throw new Error('O Bispo só pode se mover em diagonais (2D, Planar Quântica ou Hiperdiagonal de longo alcance).');
+    if (!isClassicDiagonal && !isHyperDiagonal) {
+      throw new Error('O Bispo só pode se mover em diagonais puras (2D ou Hiperdiagonal Quântica de longo alcance).');
     }
 
     // --- VARREDURA DE OBSTRUÇÃO NO HIPERESPAÇO MÚLTIPLO ---

@@ -19,8 +19,8 @@ model User {
 
 model Match {
   id            String      @id @default(uuid())
-  whitePlayerId String
-  blackPlayerId String
+  whitePlayerId String?
+  blackPlayerId String?
   status        MatchStatus
   winnerId      String?
   gameState     Json     
@@ -28,12 +28,13 @@ model Match {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
-  whitePlayer   User        @relation("WhitePlayer", fields: [whitePlayerId], references: [id])
-  blackPlayer   User        @relation("BlackPlayer", fields: [blackPlayerId], references: [id])
+  whitePlayer   User?       @relation("WhitePlayer", fields: [whitePlayerId], references: [id])
+  blackPlayer   User?       @relation("BlackPlayer", fields: [blackPlayerId], references: [id])
 }
 
 enum MatchStatus {
   PENDING
+  WAITING_FOR_OPPONENT
   ONGOING
   FINISHED
 }
