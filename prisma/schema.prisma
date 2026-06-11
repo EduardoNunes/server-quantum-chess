@@ -1,0 +1,39 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String  @id @default(uuid())
+  username       String  @unique
+  elo            Int     @default(1200)
+  matchesAsWhite Match[] @relation("WhitePlayer")
+  matchesAsBlack Match[] @relation("BlackPlayer")
+}
+
+model Match {
+  id            String      @id @default(uuid())
+  whitePlayerId String
+  blackPlayerId String
+  status        MatchStatus
+  winnerId      String?
+  gameState     Json     
+  moveHistory   String[] 
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  whitePlayer   User        @relation("WhitePlayer", fields: [whitePlayerId], references: [id])
+  blackPlayer   User        @relation("BlackPlayer", fields: [blackPlayerId], references: [id])
+}
+
+enum MatchStatus {
+  PENDING
+  ONGOING
+  FINISHED
+}

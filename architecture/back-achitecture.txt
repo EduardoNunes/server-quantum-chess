@@ -1,0 +1,25 @@
+apps/backend/src/
+├── app.module.ts                  # Módulo raiz que inicializa a aplicação
+├── prisma/                        # Configuração do Prisma Client
+│   └── prisma.service.ts
+├── auth/                          # Autenticação (JWT) para identificar os jogadores
+├── users/                         # Perfil dos jogadores e cálculo de ELO
+└── match/                         # O ecossistema Multiplayer
+    ├── match.module.ts
+    ├── match.service.ts           # Orquestra criação de salas e estados no banco
+    ├── match.gateway.ts           # Servidor WebSocket (Socket.io) - Entrada de eventos
+    └── engine/
+        ├── quantum-engine.service.ts # Traduz ações do Socket para o Core Logic
+        └── core/                  # O motor TypeScript Puro (reaproveitável no frontend)
+            ├── types.ts
+            ├── validators/        # Validadores de movimentos e colapso
+            |   ├── BishoptValidator.ts
+            |   ├── KingValidator.ts
+            |   ├── KnightValidator.ts
+            |   ├── PawnValidator.ts
+            |   ├── QueenValidator.ts
+            |   ├── RookValidator.ts
+            |   └── ValidatorFactory.ts
+            ├── GameEngine.ts
+            ├── Types.ts
+            └── game-state.ts

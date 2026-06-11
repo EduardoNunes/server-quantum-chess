@@ -1,0 +1,864 @@
+{
+  "turn": "WHITE",
+  "winnerId": null,
+  "dimensions": [
+    {
+      "grid": [
+        [
+          {
+            "id": "w-rook-0-z0",
+            "type": "ROOK",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-knight-1-z0",
+            "type": "KNIGHT",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-bishop-2-z0",
+            "type": "BISHOP",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-queen-3-z0",
+            "type": "QUEEN",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-king-4-z0",
+            "type": "KING",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-bishop-5-z0",
+            "type": "BISHOP",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-knight-6-z0",
+            "type": "KNIGHT",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-rook-7-z0",
+            "type": "ROOK",
+            "color": "WHITE"
+          }
+        ],
+        [
+          {
+            "id": "w-pawn-0-z0",
+            "type": "PAWN",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-pawn-1-z0",
+            "type": "PAWN",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-pawn-2-z0",
+            "type": "PAWN",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-pawn-3-z0",
+            "type": "PAWN",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-pawn-4-z0",
+            "type": "PAWN",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-pawn-5-z0",
+            "type": "PAWN",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-pawn-6-z0",
+            "type": "PAWN",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-pawn-7-z0",
+            "type": "PAWN",
+            "color": "WHITE"
+          }
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          {
+            "id": "b-pawn-0-z0",
+            "type": "PAWN",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-pawn-1-z0",
+            "type": "PAWN",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-pawn-2-z0",
+            "type": "PAWN",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-pawn-3-z0",
+            "type": "PAWN",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-pawn-4-z0",
+            "type": "PAWN",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-pawn-5-z0",
+            "type": "PAWN",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-pawn-6-z0",
+            "type": "PAWN",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-pawn-7-z0",
+            "type": "PAWN",
+            "color": "BLACK"
+          }
+        ],
+        [
+          {
+            "id": "b-rook-0-z0",
+            "type": "ROOK",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-knight-1-z0",
+            "type": "KNIGHT",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-bishop-2-z0",
+            "type": "BISHOP",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-queen-3-z0",
+            "type": "QUEEN",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-king-4-z0",
+            "type": "KING",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-bishop-5-z0",
+            "type": "BISHOP",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-knight-6-z0",
+            "type": "KNIGHT",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-rook-7-z0",
+            "type": "ROOK",
+            "color": "BLACK"
+          }
+        ]
+      ],
+      "level": 0,
+      "isActive": true
+    },
+    {
+      "grid": [
+        [
+          {
+            "id": "w-rook-0-z1",
+            "type": "ROOK",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-knight-1-z1",
+            "type": "KNIGHT",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-bishop-2-z1",
+            "type": "BISHOP",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-queen-3-z1",
+            "type": "QUEEN",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-king-4-z1",
+            "type": "KING",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-bishop-5-z1",
+            "type": "BISHOP",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-knight-6-z1",
+            "type": "KNIGHT",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-rook-7-z1",
+            "type": "ROOK",
+            "color": "WHITE"
+          }
+        ],
+        [
+          {
+            "id": "w-pawn-0-z1",
+            "type": "PAWN",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-pawn-1-z1",
+            "type": "PAWN",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-pawn-2-z1",
+            "type": "PAWN",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-pawn-3-z1",
+            "type": "PAWN",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-pawn-4-z1",
+            "type": "PAWN",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-pawn-5-z1",
+            "type": "PAWN",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-pawn-6-z1",
+            "type": "PAWN",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-pawn-7-z1",
+            "type": "PAWN",
+            "color": "WHITE"
+          }
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          {
+            "id": "b-pawn-0-z1",
+            "type": "PAWN",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-pawn-1-z1",
+            "type": "PAWN",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-pawn-2-z1",
+            "type": "PAWN",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-pawn-3-z1",
+            "type": "PAWN",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-pawn-4-z1",
+            "type": "PAWN",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-pawn-5-z1",
+            "type": "PAWN",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-pawn-6-z1",
+            "type": "PAWN",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-pawn-7-z1",
+            "type": "PAWN",
+            "color": "BLACK"
+          }
+        ],
+        [
+          {
+            "id": "b-rook-0-z1",
+            "type": "ROOK",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-knight-1-z1",
+            "type": "KNIGHT",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-bishop-2-z1",
+            "type": "BISHOP",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-queen-3-z1",
+            "type": "QUEEN",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-king-4-z1",
+            "type": "KING",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-bishop-5-z1",
+            "type": "BISHOP",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-knight-6-z1",
+            "type": "KNIGHT",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-rook-7-z1",
+            "type": "ROOK",
+            "color": "BLACK"
+          }
+        ]
+      ],
+      "level": 1,
+      "isActive": true
+    },
+    {
+      "grid": [
+        [
+          {
+            "id": "w-rook-0-z2",
+            "type": "ROOK",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-knight-1-z2",
+            "type": "KNIGHT",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-bishop-2-z2",
+            "type": "BISHOP",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-queen-3-z2",
+            "type": "QUEEN",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-king-4-z2",
+            "type": "KING",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-bishop-5-z2",
+            "type": "BISHOP",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-knight-6-z2",
+            "type": "KNIGHT",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-rook-7-z2",
+            "type": "ROOK",
+            "color": "WHITE"
+          }
+        ],
+        [
+          {
+            "id": "w-pawn-0-z2",
+            "type": "PAWN",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-pawn-1-z2",
+            "type": "PAWN",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-pawn-2-z2",
+            "type": "PAWN",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-pawn-3-z2",
+            "type": "PAWN",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-pawn-4-z2",
+            "type": "PAWN",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-pawn-5-z2",
+            "type": "PAWN",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-pawn-6-z2",
+            "type": "PAWN",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-pawn-7-z2",
+            "type": "PAWN",
+            "color": "WHITE"
+          }
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          {
+            "id": "b-pawn-0-z2",
+            "type": "PAWN",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-pawn-1-z2",
+            "type": "PAWN",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-pawn-2-z2",
+            "type": "PAWN",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-pawn-3-z2",
+            "type": "PAWN",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-pawn-4-z2",
+            "type": "PAWN",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-pawn-5-z2",
+            "type": "PAWN",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-pawn-6-z2",
+            "type": "PAWN",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-pawn-7-z2",
+            "type": "PAWN",
+            "color": "BLACK"
+          }
+        ],
+        [
+          {
+            "id": "b-rook-0-z2",
+            "type": "ROOK",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-knight-1-z2",
+            "type": "KNIGHT",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-bishop-2-z2",
+            "type": "BISHOP",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-queen-3-z2",
+            "type": "QUEEN",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-king-4-z2",
+            "type": "KING",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-bishop-5-z2",
+            "type": "BISHOP",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-knight-6-z2",
+            "type": "KNIGHT",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-rook-7-z2",
+            "type": "ROOK",
+            "color": "BLACK"
+          }
+        ]
+      ],
+      "level": 2,
+      "isActive": true
+    },
+    {
+      "grid": [
+        [
+          {
+            "id": "w-rook-0-z3",
+            "type": "ROOK",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-knight-1-z3",
+            "type": "KNIGHT",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-bishop-2-z3",
+            "type": "BISHOP",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-queen-3-z3",
+            "type": "QUEEN",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-king-4-z3",
+            "type": "KING",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-bishop-5-z3",
+            "type": "BISHOP",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-knight-6-z3",
+            "type": "KNIGHT",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-rook-7-z3",
+            "type": "ROOK",
+            "color": "WHITE"
+          }
+        ],
+        [
+          {
+            "id": "w-pawn-0-z3",
+            "type": "PAWN",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-pawn-1-z3",
+            "type": "PAWN",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-pawn-2-z3",
+            "type": "PAWN",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-pawn-3-z3",
+            "type": "PAWN",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-pawn-4-z3",
+            "type": "PAWN",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-pawn-5-z3",
+            "type": "PAWN",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-pawn-6-z3",
+            "type": "PAWN",
+            "color": "WHITE"
+          },
+          {
+            "id": "w-pawn-7-z3",
+            "type": "PAWN",
+            "color": "WHITE"
+          }
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          {
+            "id": "b-pawn-0-z3",
+            "type": "PAWN",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-pawn-1-z3",
+            "type": "PAWN",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-pawn-2-z3",
+            "type": "PAWN",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-pawn-3-z3",
+            "type": "PAWN",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-pawn-4-z3",
+            "type": "PAWN",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-pawn-5-z3",
+            "type": "PAWN",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-pawn-6-z3",
+            "type": "PAWN",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-pawn-7-z3",
+            "type": "PAWN",
+            "color": "BLACK"
+          }
+        ],
+        [
+          {
+            "id": "b-rook-0-z3",
+            "type": "ROOK",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-knight-1-z3",
+            "type": "KNIGHT",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-bishop-2-z3",
+            "type": "BISHOP",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-queen-3-z3",
+            "type": "QUEEN",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-king-4-z3",
+            "type": "KING",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-bishop-5-z3",
+            "type": "BISHOP",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-knight-6-z3",
+            "type": "KNIGHT",
+            "color": "BLACK"
+          },
+          {
+            "id": "b-rook-7-z3",
+            "type": "ROOK",
+            "color": "BLACK"
+          }
+        ]
+      ],
+      "level": 3,
+      "isActive": true
+    }
+  ],
+  "moveHistory": [],
+  "actionsRemaining": 2
+}

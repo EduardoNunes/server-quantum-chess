@@ -1,0 +1,18 @@
+apps/frontend/src/
+├── assets/                # Modelos 3D das peças (.gltf / .glb), texturas
+├── components/
+│   ├── ui/                # Botões, Modais, Paineis (Tailwind)
+│   ├── game/              # Componentes React puros da UI do jogo
+│   └── scene3d/           # Componentes do React Three Fiber
+│       ├── Board3D.tsx    # Renderiza o grid dimensional
+│       ├── Piece3D.tsx    # Renderiza a malha e animações
+│       └── CameraRig.tsx  # Controle de órbita do jogador
+├── hooks/
+│   └── useSocket.ts       # Gerencia a conexão com o MatchGateway do Nest
+├── store/                 # Gerenciamento de estado global (Zustand)
+│   └── useGameStore.ts    # Espelha o `gameState` que vem do backend
+├── routes/
+│   └── AppRoutes.tsx      # Proteção de rotas, redirecionamentos e tela de manutenção
+└── pages/
+    ├── Lobby.tsx          # Matchmaking, escolha da dimensão do Rei Master
+    └── Play.tsx           # A arena principal do jogo
