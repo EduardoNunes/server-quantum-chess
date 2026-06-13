@@ -15,16 +15,24 @@ O ciclo de vida de qualquer partida inicia-se obrigatoriamente no **Turno 0**, u
 
 ---
 
-## 📐 2. Espaço Vetorial e Economia de Turnos
+## 📐 2. Espaço Vetorial e Economia de Turnos (Modalidades de Partida)
 
-As partidas são processadas em uma matriz quadridimensional discreta:
+As partidas são processadas em uma matriz quadridimensional discreta baseada nos eixos $(X, Y, Z)$:
 * **Eixo $X$:** Colunas do tabuleiro ($0$ a $7$).
 * **Eixo $Y$:** Fileiras do tabuleiro ($0$ a $7$).
-* **Eixo $Z$:** Índice da Dimensão/Tabuleiro ativo ($0$ a $7$, suportando de 1 a 8 dimensões).
+* **Eixo $Z$:** Índice da Dimensão/Tabuleiro ativo ($0$ a $7$, mapeado logicamente no jogo como Dimensão $1$ até Dimensão $N$).
 
-### Economia de Ações
-* Cada rodada concede ao jogador um teto de pontos de energia (configuração padrão: **2 ações por rodada**).
-* Deslocamentos locais ou saltos interdimensionais puros gastam rigorosamente **1 ação**. O turno é transferido quando o contador atinge zero.
+No ato de criação do jogo (via painel de parâmetros do menu inicial), o criador define a estrutura do espaço-tempo escolhendo a quantidade de tabuleiros simultâneos, suportando estritamente **de 2 a 8 dimensões** em paralelo.
+
+### ⚡ Economia de Energia e Modos de Turno
+A quantidade de pontos de energia (jogadas autorizadas) que um jogador pode gastar em seu turno, bem como a ordem geográfica de execução dos lances, é determinada pela **Modalidade de Partida** selecionada:
+
+1. **Modalidade Clássica (1 Jogada por Turno):** Cada rodada concede ao jogador ativo rigorosamente **1 única ação**. Deslocamentos locais ou saltos interdimensionais encerram o turno imediatamente em qualquer tabuleiro, transferindo o ponteiro para o adversário.
+2. **Modalidade Dinâmica (Quantidade de Jogadas por Reis Vivos + Fluxo Sequencial):** A energia do jogador é recalculada no início de cada turno baseado no seu saldo de monarcas sobreviventes, operando sob uma **Janela de Resolução Temporal Obrigatória**:
+   * *Cálculo de Ações:* O jogador ganha exatamente **1 ponto de ação para cada Rei (seja Master ou Secundário) de sua cor que estiver atualmente vivo e ativo** no multiverso. Ele reterá no mínimo 1 ação por turno enquanto seu Rei Master estiver vivo.
+   * *O Fluxo Obrigatório ($1 \rightarrow D$):* Os movimentos **não podem** ser feitos em qualquer ordem livre. O jogador é obrigado a desferir as suas jogadas seguindo a ordem estrita das fendas, partindo da **Dimensão 1 em direção à Dimensão D**. 
+   * *O Salto de Tabuleiro Morto/Vazio:* O jogador executa a sua jogada na Dimensão corrente. Caso uma dimensão na fila sequencial **não possua um Rei da cor do jogador ativo** (seja porque o Rei mudou de dimensão ou foi capturado), a janela de oportunidade daquele tabuleiro expira imediatamente. A jogada é **automaticamente passada para a dimensão seguinte** que contiver um Rei vivo da sua cor.
+   * *Transição de Turno:* O consumo de cada lance local ou salto dimensional deduz **1 ação** do contador global. O turno é encerrado e transferido para o oponente assim que o contador dinâmico de ações remanescentes atingir zero ou após a onda sequencial ultrapassar a última dimensão ativa configurada.
 
 ---
 
