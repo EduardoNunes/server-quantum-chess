@@ -49,7 +49,7 @@ O peão atua como um vetor assimétrico, possuindo mecânicas exclusivas de tran
   * **Passo Frontal Dimensional:** O peão **não** realiza salto vertical estático para a casa exata de cima ($\Delta x = 0, \Delta y = 0$). Ele deve obrigatoriamente saltar para a **casa diretamente à frente na dimensão superior** ($\Delta x = 0$, $\Delta y = \pm 1$ dependendo da cor, $\Delta z = \pm 1$).
   * **Captura Quântica Frontal:** O abate no hiperespaço ocorre nas **diagonais à frente na dimensão superior** ($|\Delta x| = 1, \Delta y = \pm 1, \Delta z = \pm 1$).
   * **En Passant Dimensional:** Um ataque tático de fenda. Consiste na captura de um peão da dimensão superior que fizer o movimento de duas casas clássicas e, nesse trajeto, passar pela "casa quântica" atacada por um peão inimigo na dimensão inferior.
-  * **Promoção Quântica para Rei:** Se o peão alcançar a última fileira do tabuleiro efetuando um salto para a dimensão superior, ele se transforma automaticamente em um **Rei Secundário**. Este é o único movimento de uma peça não-Rei autorizado a saltar para dentro de uma dimensão inativa, reativando-a.
+  * **Promoção Quântica para Rei:** Se o peão alcançar a última fileira do tabuleiro efetuando um salto para a dimensão superior, ele se transforma automaticamente em um **Rei Secundário**. Este é o único movimento de uma peça não-Rei autorizado a saltar para dentro de uma dimensão inativa, reativando-a **(desde que a dimensão de destino ainda possua ao menos uma peça aliada, evitando a morte definitiva do tabuleiro)**.
 
 ### 🧱 A Torre Quântica (`RookValidator`)
 * **Geometria Retilínea:** Move-se em linhas retas puras pelo hiperespaço ($\Delta x > 0, \Delta y = 0, \Delta z = 0$ ou equivalentes). Pode cruzar várias dimensões em um único lance, mas não pula peças.
@@ -64,11 +64,14 @@ O peão atua como um vetor assimétrico, possuindo mecânicas exclusivas de tran
 * **Composição de Poder:** Soma as direções livres da Torre e do Bispo, respeitando as colisões no trajeto.
 
 ### 👑 O Rei (Master e Secundário) (`KingValidator`)
+O núcleo vital da estratégia interdimensional baseia-se em como os Reis operam:
+
 * **Regra Universal de Movimento:** O rei master não tem movimento diferente do rei secundário. Todos os reis se movem na mesma geometria da Rainha, mas estritamente limitados a **1 casa de distância por vez** em qualquer eixo.
 * **A Restrição do Xeque Quântico:** Qualquer rei em Xeque não pode saltar dimensão até que saia do xeque.
 * **O Roque Tradicional:** Funciona nos moldes clássicos entre um Rei e uma Torre da mesma dimensão que não tenham se movido, não está em xeque e não tem casa central ameaçada.
 * **O Roque Temporal (Inovação Quântica):** O rei pode fazer hook temporal com outro rei, mas somente se ambos não tiverem sido movidos previamente, e se ambos não estiverem em posição de xeque.
-* **Salto de Reativação:** O Rei (e o Peão Quântico em promoção final) são as **únicas** peças capazes de realizar um salto com destino a uma dimensão inativa, "acordando-a".
+* **Salto de Reativação:** O Rei (e o Peão Quântico em promoção final) são as **únicas** peças capazes de realizar um salto com destino a uma dimensão inativa, "acordando-a". 
+* **Exceção de Morte Definitiva:** Um Rei **NÃO** pode saltar para uma dimensão inativa que **não possua mais nenhuma peça aliada**. Se um tabuleiro foi totalmente varrido do seu exército, o Rei não pode resgatá-lo sozinho.
 
 ---
 
@@ -83,6 +86,7 @@ O peão atua como um vetor assimétrico, possuindo mecânicas exclusivas de tran
 
 * **Inatividade Dimensional Unilateral (Ausência do Rei):** Se o rei for tomado ou sair da dimensão dele deixando a dimensão sem rei, essa dimensão fica inativa para esse jogador não podendo mover as peças, passar peças de outra dimensão por ela e nem pular para ela.
   * *Restauração:* Essa dimensão permanecerá morta para aquele jogador **até que ele consiga transportar outro Rei** (ou promover um Peão Quântico a Rei) para dentro dela, o que anula a penalidade e reativa todas as peças aliadas que estavam congeladas.
+  * *Morte Definitiva da Dimensão:* A restauração só é possível se ainda existir **pelo menos uma peça aliada** "congelada" naquela dimensão. Se não restar absolutamente nenhuma peça da cor do jogador no tabuleiro afetado, a dimensão é considerada totalmente aniquilada para esse jogador até o final da partida, e o Rei perde a permissão de saltar para lá.
 * **Fim de Jogo (A Queda do Master):** O jogo termina se o rei master tomar mate. A queda de um rei secundário apenas inativa a dimensão, mas a queda do Rei Master decreta o colapso absoluto do universo e a vitória do adversário.
 
 ---
@@ -99,3 +103,31 @@ A malha do multiverso possui limites estritos de massa para duplicatas do mesmo 
 5. **Paradoxo de Bispos:** O limite é de **1 Bispo por cor de casa por dimensão**. Se um bispo saltar para uma dimensão onde já existe um ou mais bispos aliados controlando a **mesma cor de casa** (clara ou escura), o bispo residente daquela cor mais próximo fisicamente do novo bispo é colapsado por paradoxo de bispos.
 6. **Paradoxo de Peões:** O limite é de **8 Peões por dimensão**. Se um peão realizar um salto direcional multidimensional para um tabuleiro onde já existam 8 peões aliados, o peão residente que estiver **mais próximo** do novo peão sofre o colapso por paradoxo de peões. Promoção tradicional de peão não gera paradoxo podendo adicionar qualquer peça aliada sem colapsar aliadas naquela dimensão.
 7. **Paradoxo da Promoção a Rei:** O salto de um peão que se promove a Rei na dimensão superior não ativa o Paradoxo de Peões. Contudo, ao materializar-se como Rei Secundário, se já houver um Rei residente na dimensão, o rei pré-existente será **colapsado por paradoxo de promoção a rei** (salvo se for o Rei Master, conforme a Exceção Soberana da Regra 1).
+
+---
+
+## 🤝 7. Condições de Empate Quântico (Draw)
+
+O motor autoritativo declarará o encerramento prematuro da partida em estado de empate sempre que o multiverso atingir um impasse matemático ou um loop lógico intransponível.
+
+### 7.1. Empates por Insuficiência Material
+Ocorre quando o inventário de peças ativas de um ou de ambos os jogadores é incapaz de criar uma rede de restrição geométrica para forçar o xeque-mate no Rei Master adversário.
+
+* **O Vazio Absoluto (Master vs. Master):** Quando restam apenas os dois Reis Masters em todo o multiverso. Como o raio de ação de ambos está limitado a 1 casa, eles não se podem atacar mutuamente sem violar a regra de autoxeque.
+* **A Caçada Inútil (Master + Peça Menor vs. Master):** Um dos lados possui apenas o Rei Master acompanhado de **1 Cavalo** ou **1 Bispo**, enquanto o adversário tem apenas o Rei Master. 
+  * *Justificativa Lógica:* Como o Rei Master isolado não possui outras peças aliadas no multiverso, a **Exceção de Morte Definitiva** o proíbe de realizar saltos dimensionais. A perseguição fica restrita a um único plano 2D, onde uma única peça menor é matematicamente incapaz de forçar o mate.
+* **A Marcha dos Zumbis (Master + Reis Secundários vs. Master):** Um dos lados possui o Rei Master e múltiplos Reis Secundários, e o adversário possui apenas o Rei Master.
+  * *Justificativa Lógica:* O **Paradoxo de Reis** restringe a ocupação máxima a **1 Rei por dimensão**. Consequentemente, o exército de Reis Secundários é forçado a permanecer disperso por fendas diferentes. É impossível que eles ingressem na mesma dimensão para unir forças e formar uma barreira de contenção contra o Master adversário.
+
+### 7.2. Empates por Bloqueio e Anomalias Estruturais
+Cenários gerados pelo isolamento permanente de forças nas fendas.
+
+* **Prisão Dimensional Intransponível (Bloqueio Físico):** Ocorre se um jogador detém material vencedor (ex: Rainha e Torre), mas este contingente está isolado dentro de uma dimensão inativa. Se o jogador tiver perdido todos os seus Reis ou se a referida dimensão tiver sofrido **Morte Definitiva** (zero peças aliadas sobreviventes), o exército fica congelado permanentemente. Se as forças restantes nas fendas utilizáveis forem insuficientes para o mate, decreta-se o empate.
+* **Aniquilação Mútua por Paradoxo:** Se um jogador efetuar um salto hiperdimensional desesperado que resulte no acionamento instantâneo de uma *Anomalia de Paradoxo* (Seção 6) e a destruição da peça remanescente deixar ambos os exércitos sem material mínimo de ataque, a partida é encerrada como empate por aniquilação.
+
+### 7.3. Empates Universais de Sistema
+Garantias lógicas codificadas para barrar partidas infinitas.
+
+* **Rei Afogado Quântico (Stalemate):** No turno do jogador ativo, o seu Rei Master **não se encontra em estado de xeque**, mas o utilizador não dispõe de **nenhum movimento legal possível** com nenhuma peça do seu exército em nenhuma dimensão ativa (peças bloqueadas por obstrução clássica, dimensões inacessíveis ou lances que resultariam em autoxeque do Master).
+* **O Paradoxo de Zeno (Tríplice Repetição):** Se a configuração exata do multiverso (coordenadas de todas as peças nas $N$ dimensões, status de ativação de cada grid, direitos de Roque Tradicional/Temporal e ponteiro do turno atual) se repetir de forma idêntica por **3 vezes** ao longo da partida.
+* **Exaustão de Energia (Regra dos 50 Movimentos):** Se forem executadas 50 jogadas consecutivas por ambos os lados sem que nenhum peão mude de fileira/dimensão e sem que ocorra nenhuma captura de peça ou eliminação por paradoxo.
