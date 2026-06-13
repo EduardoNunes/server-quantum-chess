@@ -14,9 +14,10 @@ export class PawnValidator implements MoveValidator {
     // Eixo Y: Brancas sobem (+1), Pretas descem (-1)
     const directionY = piece.color === 'WHITE' ? 1 : -1;
     const startingRow = piece.color === 'WHITE' ? 1 : 6;
+    const enemyDirY = piece.color === 'WHITE' ? -1 : 1;
 
-    // Eixo Z Quântico: Brancas sobem as dimensões (+1), Pretas descem as dimensões (-1)
-    const directionZ = piece.color === 'WHITE' ? 1 : -1;
+    // Eixo Z Quântico: Todos os peões apenas sobem as dimensões (+1)
+    const directionZ = 1;
 
     // Validação de limite de existência da dimensão de destino
     if (to.z < 0 || to.z >= state.dimensions.length) {
@@ -26,6 +27,11 @@ export class PawnValidator implements MoveValidator {
     // Captura de forma segura a peça alvo no tabuleiro de destino
     const targetPiece = state.dimensions[to.z].grid[to.y][to.x];
     const isDestinationEmpty = targetPiece === null;
+
+    // Último movimento registrado no histórico (útil para En Passant)
+    const lastMove = state.moveHistory && state.moveHistory.length > 0 
+      ? state.moveHistory[state.moveHistory.length - 1] 
+      : null;
 
     // --- CENÁRIO A: MOVIMENTO TRADICIONAL (Mesma Dimensão / dz === 0) ---
     if (dz === 0) {
@@ -47,29 +53,81 @@ export class PawnValidator implements MoveValidator {
       if (Math.abs(dx) === 1 && dy === directionY && !isDestinationEmpty && targetPiece.color !== piece.color) {
         return true;
       }
+
+      // 4. Captura En Passant Tradicional (2D)
+      if (Math.abs(dx) === 1 && dy === directionY && isDestinationEmpty) {
+        if (lastMove && lastMove.to.x === to.x && lastMove.to.z === to.z) {
+          // O peão inimigo fez um passo duplo na mesma dimensão
+          if (lastMove.from.y === to.y - enemyDirY && lastMove.to.y === to.y + enemyDirY) {
+            const enemyPiece = state.dimensions[lastMove.to.z].grid[lastMove.to.y][lastMove.to.x];
+            if (enemyPiece && enemyPiece.type === 'PAWN' && enemyPiece.color !== piece.color) {
+              return true; // En Passant Tradicional Válido
+            }
+          }
+        }
+      }
     }
 
     // --- CENÁRIO B: MOVIMENTO MULTIDIMENSIONAL (Mudança de Dimensão / dz !== 0) ---
     else {
-      // Correção do avanço quântico simétrico para ambas as cores
-      if (dz !== directionZ) {
-        throw new Error(`O Peão Quântico só pode avançar para a dimensão imediatamente vizinha no sentido do seu exército.`);
+      const isSingleDimensionalJump = dz === directionZ;
+      const isDoubleDimensionalJump = dz === 2 * directionZ && from.y === startingRow;
+
+      if (!isSingleDimensionalJump && !isDoubleDimensionalJump) {
+        throw new Error('O Peão Quântico só pode avançar 1 dimensão (ou 2 dimensões no seu movimento inicial) para cima.');
       }
 
-      // 1. Passo Simples Dimensional (Avança no eixo Z, mantém X e Y estáticos)
-      if (dx === 0 && dy === 0 && isDestinationEmpty) {
-        return true;
-      }
-
-      // 2. Captura Diagonal Multidimensional
-      // Caso Diagonal Frontal: Anda 1 no Z, avança 1 para frente em Y e 1 para o lado em X
-      const isDiagonalFrontalQuantumCapture = Math.abs(dx) === 1 && dy === directionY;
-
-      if (isDiagonalFrontalQuantumCapture) {
-        if (!isDestinationEmpty && targetPiece.color !== piece.color) {
+      if (isSingleDimensionalJump) {
+        // 1. Passo Simples Dimensional (Avança no eixo Z e no eixo Y simultaneamente, mantém X estático)
+        if (dx === 0 && dy === directionY && isDestinationEmpty) {
           return true;
         }
-        throw new Error('O Peão só pode mover-se em diagonal multidimensional para capturar uma peça inimiga.');
+
+        // 2. Captura Diagonal Multidimensional
+        const isDiagonalFrontalQuantumCapture = Math.abs(dx) === 1 && dy === directionY;
+
+        if (isDiagonalFrontalQuantumCapture) {
+          if (!isDestinationEmpty && targetPiece.color !== piece.color) {
+            return true;
+          }
+
+          // 3. Captura En Passant Dimensional (Hiperdimensão)
+          if (isDestinationEmpty && lastMove && lastMove.to.x === to.x) {
+            if (lastMove.from.y === to.y - enemyDirY && lastMove.to.y === to.y + enemyDirY) {
+              // Verifica se o peão inimigo estava na mesma dimensão de destino (passo duplo 2D na dimensão alvo)
+              const isEnemyDouble2DInTargetDim = lastMove.from.z === to.z && lastMove.to.z === to.z;
+              
+              // Ou se o peão inimigo fez um salto dimensional duplo (passando pela dimensão alvo)
+              const isEnemyDouble3D = lastMove.from.z === to.z - directionZ && lastMove.to.z === to.z + directionZ;
+
+              if (isEnemyDouble2DInTargetDim || isEnemyDouble3D) {
+                const enemyPiece = state.dimensions[lastMove.to.z].grid[lastMove.to.y][lastMove.to.x];
+                if (enemyPiece && enemyPiece.type === 'PAWN' && enemyPiece.color !== piece.color) {
+                  return true; // En Passant Dimensional Válido
+                }
+              }
+            }
+          }
+
+          throw new Error('O Peão só pode mover-se em diagonal multidimensional para capturar uma peça inimiga.');
+        }
+      } else if (isDoubleDimensionalJump) {
+        // 3. Passo Duplo Dimensional (Avança 2 no eixo Z e 2 no eixo Y simultaneamente)
+        if (dx === 0 && dy === 2 * directionY && isDestinationEmpty) {
+          const intermediateY = from.y + directionY;
+          const intermediateZ = from.z + directionZ;
+          const intermediateDimension = state.dimensions[intermediateZ];
+          
+          if (!intermediateDimension || !intermediateDimension.isActive) {
+            throw new Error('A dimensão intermediária colapsou ou não existe.');
+          }
+          
+          if (intermediateDimension.grid[intermediateY][from.x] === null) {
+            return true;
+          } else {
+            throw new Error('O caminho para o salto dimensional duplo está obstruído por outra peça.');
+          }
+        }
       }
     }
 

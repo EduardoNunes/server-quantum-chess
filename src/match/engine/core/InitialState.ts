@@ -60,6 +60,8 @@ export const generateInitialState = (): GameState => {
     dimensions,
     turn: 'WHITE',
     actionsRemaining: 2,
-    winnerId: null
+    winnerId: null,
+    isCheck: false,
+    moveHistory: []
   };
 };

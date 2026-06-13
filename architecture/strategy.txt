@@ -1,0 +1,4 @@
+Roque entre reis podem ser feitos 
+  - para passar a jogada.
+  - para evitar um futuro xeque no rei master.
+Salto quântico de um rei pode rativar uma dimensão inativa.

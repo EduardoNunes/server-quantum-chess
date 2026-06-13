@@ -42,6 +42,7 @@ export interface Piece {
   type: PieceType;          // Tipo atual da peça (pode mudar dinamicamente na promoção)
   color: Color;             // Aliança da peça (Brancas ou Pretas)
   isMasterKing?: boolean;   // Flag oculta: TRUE se for o Rei Master (omitido para o oponente)
+  hasMoved?: boolean;      // Flag para validar movimentos especiais como o Roque
 }
 
 /**
@@ -62,6 +63,10 @@ export interface GameState {
   turn: Color;              // De quem é a vez de jogar ('WHITE' ou 'BLACK')
   actionsRemaining: number; // Contador de ações globais restantes no turno atual (Máximo: 2)
   winnerId: string | null;  // ID do usuário vencedor se o Rei Master inimigo cair
+  isCheck: boolean;         // TRUE se o Rei Master do jogador atual estiver em xeque
+  whiteMasterKing?: Vector3D; // Coordenadas do Rei Master Branco (se ativo)
+  blackMasterKing?: Vector3D; // Coordenadas do Rei Master Preto (se ativo)
+  moveHistory: MoveIntent[]; // Histórico completo de movimentos para validação de regras como En Passant
 }
 
 /**
