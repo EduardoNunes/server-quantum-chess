@@ -49,8 +49,7 @@ export class MatchService {
       },
       data: {
         gameState: updatedState,
-        // Se a engine detectou um vencedor, você pode mudar o status aqui também:
-        status: updatedState.winnerId ? 'FINISHED' : 'ONGOING',
+        status: updatedState.status,
         winnerId: updatedState.winnerId,
       },
     });
@@ -160,7 +159,8 @@ export class MatchService {
       });
     }
 
-    throw new Error('A partida já está cheia ou em andamento.');
+    // Se a partida não estiver mais aguardando oponente, permite a entrada como espectador
+    return match;
   }
 
   /**

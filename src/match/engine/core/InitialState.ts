@@ -59,9 +59,13 @@ export const generateInitialState = (): GameState => {
   return {
     dimensions,
     turn: 'WHITE',
+    modality: 'CLASSIC',
+    status: 'WAITING_FOR_OPPONENT',
     actionsRemaining: 2,
     winnerId: null,
     isCheck: false,
-    moveHistory: []
+    moveHistory: [],
+    halfMoveClock: 0,
+    stateHashes: []
   };
 };

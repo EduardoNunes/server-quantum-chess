@@ -37,4 +37,5 @@ enum MatchStatus {
   WAITING_FOR_OPPONENT
   ONGOING
   FINISHED
+  COMPLETED
 }

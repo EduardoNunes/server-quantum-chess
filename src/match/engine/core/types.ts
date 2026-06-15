@@ -1,5 +1,7 @@
 // src/match/engine/core/types.ts
 
+export type GameModality = 'CLASSIC' | 'DYNAMIC';
+
 /**
  * Cores clássicas das peças do xadrez
  */
@@ -61,12 +63,17 @@ export interface Dimension {
 export interface GameState {
   dimensions: Dimension[];  // Array contendo o estado das 4 dimensões
   turn: Color;              // De quem é a vez de jogar ('WHITE' ou 'BLACK')
+  modality: GameModality;   // O estilo de progressão de turnos
+  activeDimensionIndex?: number; // Para modalidade dinâmica, indica a dimensão da jogada atual
   actionsRemaining: number; // Contador de ações globais restantes no turno atual (Máximo: 2)
   winnerId: string | null;  // ID do usuário vencedor se o Rei Master inimigo cair
   isCheck: boolean;         // TRUE se o Rei Master do jogador atual estiver em xeque
   whiteMasterKing?: Vector3D; // Coordenadas do Rei Master Branco (se ativo)
   blackMasterKing?: Vector3D; // Coordenadas do Rei Master Preto (se ativo)
   moveHistory: MoveIntent[]; // Histórico completo de movimentos para validação de regras como En Passant
+  status: 'ONGOING' | 'CHECKMATE' | 'STALEMATE' | 'COMPLETED' | 'WAITING_FOR_OPPONENT'; // Status atual da partida
+  halfMoveClock: number; // Contador de meio-movimentos para a regra dos 50 movimentos
+  stateHashes: string[]; // Array de hashes do estado para detectar repetições (Threefold Repetition)
 }
 
 /**

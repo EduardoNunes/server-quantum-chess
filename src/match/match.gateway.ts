@@ -70,6 +70,14 @@ export class MatchGateway {
       if (!match) throw new Error('Partida não encontrada.');
 
       const gameState = match.gameState as any;
+      const originalTurn = gameState.turn;
+
+      const isWhite = String(userId).trim() === String(match.whitePlayerId).trim();
+      const isBlack = String(userId).trim() === String(match.blackPlayerId).trim();
+
+      if (!isWhite && !isBlack) {
+        throw new Error('Bloqueio Quântico: Espectadores não podem alterar a linha do tempo.');
+      }
 
       // 🚨 TRAVA DO TURNO 0: Impede qualquer movimento se os Reis Master não foram escolhidos
       if (!gameState.whiteMasterKing || !gameState.blackMasterKing) {
@@ -81,6 +89,14 @@ export class MatchGateway {
 
       if (!movingPiece) {
         throw new Error('Peça não encontrada na origem.');
+      }
+
+      if (gameState.turn !== movingPiece.color) {
+        throw new Error('Bloqueio Quântico: Não é o turno dessa cor.');
+      }
+
+      if ((isWhite && movingPiece.color !== 'WHITE') || (isBlack && movingPiece.color !== 'BLACK')) {
+        throw new Error('Bloqueio Quântico: Você só pode controlar o seu próprio exército.');
       }
 
       // 🚨 TRAVA DE DIMENSÃO INATIVA
@@ -105,6 +121,13 @@ export class MatchGateway {
         const targetDimHasPieces = gameState.dimensions[data.to.z]?.grid.some((row: any[]) => row.some((p: any) => p && p.color === movingPiece.color));
         if (!targetDimHasPieces) {
           throw new Error('Bloqueio Quântico: O Rei não pode saltar para uma dimensão onde o seu exército não possui peças.');
+        }
+      }
+
+      // 🚨 TRAVA DE DIMENSÃO DINÂMICA
+      if (gameState.modality === 'DYNAMIC' && gameState.activeDimensionIndex !== undefined) {
+        if (data.from.z !== gameState.activeDimensionIndex) {
+          throw new Error(`Bloqueio Quântico: Na Modalidade Dinâmica, a sua jogada atual deve ser realizada obrigatoriamente na Dimensão ${gameState.activeDimensionIndex + 1}.`);
         }
       }
 
@@ -221,17 +244,21 @@ export class MatchGateway {
 
       if (result.updatedState.whiteMasterKing) {
         const { x, y, z } = result.updatedState.whiteMasterKing;
-        const wPiece = result.updatedState.dimensions[z]?.grid[y]?.[x];
-        if (wPiece && wPiece.type === 'KING' && wPiece.color === 'WHITE') {
-          wPiece.isMasterKing = true;
+        if (z !== undefined) {
+          const wPiece = result.updatedState.dimensions[z]?.grid[y]?.[x];
+          if (wPiece && wPiece.type === 'KING' && wPiece.color === 'WHITE') {
+            wPiece.isMasterKing = true;
+          }
         }
       }
 
       if (result.updatedState.blackMasterKing) {
         const { x, y, z } = result.updatedState.blackMasterKing;
-        const bPiece = result.updatedState.dimensions[z]?.grid[y]?.[x];
-        if (bPiece && bPiece.type === 'KING' && bPiece.color === 'BLACK') {
-          bPiece.isMasterKing = true;
+        if (z !== undefined) {
+          const bPiece = result.updatedState.dimensions[z]?.grid[y]?.[x];
+          if (bPiece && bPiece.type === 'KING' && bPiece.color === 'BLACK') {
+            bPiece.isMasterKing = true;
+          }
         }
       }
 
@@ -490,6 +517,87 @@ export class MatchGateway {
         }
       }
 
+      // RASTREAMENTO DE EMPATES: Regra dos 50 Movimentos e Tríplice Repetição
+      const isCapture = targetPiece !== null || isEnPassant;
+      const isPawnMove = movingPiece.type === 'PAWN';
+      const paradoxOccurred = (result.events as any[]).some((e: any) => e.type === 'COLLAPSE');
+
+      let currentHalfMoveClock = gameState.halfMoveClock || 0;
+      let currentStateHashes = gameState.stateHashes || {};
+
+      if (isCapture || isPawnMove || paradoxOccurred || promotedToKing) {
+        currentHalfMoveClock = 0;
+        currentStateHashes = {};
+      } else {
+        currentHalfMoveClock++;
+      }
+
+      result.updatedState.halfMoveClock = currentHalfMoveClock;
+      result.updatedState.stateHashes = currentStateHashes;
+
+      let stateHash = `${result.updatedState.turn}|`;
+      result.updatedState.dimensions.forEach((dim: any) => {
+        if (!dim.isActive) {
+          stateHash += 'X|';
+        } else {
+          dim.grid.forEach((row: any[]) => {
+            row.forEach((p: any) => {
+              if (!p) stateHash += '.';
+              else stateHash += `${p.color[0]}${p.type[0]}${p.hasMoved ? '1' : '0'}${p.isMasterKing ? 'M' : ''}`;
+            });
+          });
+          stateHash += '|';
+        }
+      });
+      result.updatedState.stateHashes[stateHash] = (result.updatedState.stateHashes[stateHash] || 0) + 1;
+
+      // PROGRESSÃO DO TURNO (Dinâmico x Clássico)
+      if (result.updatedState.status !== 'COMPLETED') {
+        const isClassic = result.updatedState.modality === 'CLASSIC';
+        
+        if (isClassic) {
+           result.updatedState.turn = originalTurn === 'WHITE' ? 'BLACK' : 'WHITE';
+           result.updatedState.actionsRemaining = 1;
+        } else {
+           // DYNAMIC
+           let startZ = data.from.z + 1; // Próxima dimensão
+           let found = false;
+           let nextTurn = originalTurn;
+
+           for (let z = startZ; z < result.updatedState.dimensions.length; z++) {
+             const dimActive = result.updatedState.dimensions[z].grid.some((row: any[]) => row.some((p: any) => p && p.type === 'KING' && p.color === nextTurn));
+             if (dimActive) {
+               result.updatedState.activeDimensionIndex = z;
+               found = true;
+               break;
+             }
+           }
+
+           if (!found) {
+             nextTurn = originalTurn === 'WHITE' ? 'BLACK' : 'WHITE';
+             for (let z = 0; z < result.updatedState.dimensions.length; z++) {
+               const dimActive = result.updatedState.dimensions[z].grid.some((row: any[]) => row.some((p: any) => p && p.type === 'KING' && p.color === nextTurn));
+               if (dimActive) {
+                 result.updatedState.activeDimensionIndex = z;
+                 found = true;
+                 break;
+               }
+             }
+             if (!found) result.updatedState.activeDimensionIndex = 0; 
+           }
+
+           result.updatedState.turn = nextTurn;
+
+           let actionsCount = 0;
+           const startActiveDimIndex = result.updatedState.activeDimensionIndex ?? 0;
+           for (let z = startActiveDimIndex; z < result.updatedState.dimensions.length; z++) {
+             const dimActive = result.updatedState.dimensions[z].grid.some((row: any[]) => row.some((p: any) => p && p.type === 'KING' && p.color === nextTurn));
+             if (dimActive) actionsCount++;
+           }
+           result.updatedState.actionsRemaining = actionsCount;
+        }
+      }
+
       // Salva o novo estado gerado e sincroniza com a sala inteira
       await this.matchService.updateMatchState(match.id, result.updatedState);
       this.server.to(match.id).emit('match_updated', {
@@ -552,6 +660,27 @@ export class MatchGateway {
         console.log(`✨ Rei Master Preto fixado em: (${data.coord.x}, ${data.coord.y}, Dimensão: ${data.coord.z + 1})`);
       }
 
+      if (gameState.whiteMasterKing && gameState.blackMasterKing) {
+        if (gameState.modality === 'DYNAMIC') {
+           let found = false;
+           let actionsCount = 0;
+           for (let z = 0; z < gameState.dimensions.length; z++) {
+             const dimActive = gameState.dimensions[z].grid.some((row: any[]) => row.some((p: any) => p && p.type === 'KING' && p.color === 'WHITE'));
+             if (dimActive) {
+               if (!found) {
+                 gameState.activeDimensionIndex = z;
+                 found = true;
+               }
+               actionsCount++;
+             }
+           }
+           if (!found) gameState.activeDimensionIndex = 0;
+           gameState.actionsRemaining = actionsCount;
+        } else {
+           gameState.actionsRemaining = 1;
+        }
+      }
+
       // Atualiza o banco e repassa o estado modificado para travar/destravar a tela no front
       await this.matchService.updateMatchState(match.id, gameState);
       this.server.to(match.id).emit('match_updated', { gameState, events: [] });
@@ -583,8 +712,74 @@ export class MatchGateway {
 
       await this.matchService.updateMatchState(match.id, gameState);
       this.server.to(match.id).emit('match_updated', { gameState, events: [{ type: 'MATE', payload: {} }] });
+
+      const matches = await this.matchService.getActiveMatches();
+      this.server.emit('lobby_matches', matches);
     } catch (err: any) {
       console.error(`❌ [GATEWAY ERROR] Falha ao processar Xeque-Mate: ${err.message}`);
+    }
+  }
+
+  /**
+   * NOVO EVENTO: Desistência da Partida
+   */
+  @SubscribeMessage('resign_match')
+  async handleResign(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { matchId: string }
+  ) {
+    const userId = client.handshake.auth.userId;
+    console.log(`🏳️ [GATEWAY] Jogador ${userId} desistiu da partida ${data.matchId}.`);
+
+    try {
+      const match = await this.matchService.findMatchById(data.matchId);
+      if (!match) throw new Error('Partida não encontrada.');
+
+      const gameState = match.gameState as any;
+      if (gameState.status === 'COMPLETED') return;
+
+      const isWhite = String(userId).trim() === String(match.whitePlayerId).trim();
+      const isBlack = String(userId).trim() === String(match.blackPlayerId).trim();
+
+      if (!isWhite && !isBlack) {
+        throw new Error('Você não faz parte desta partida para desistir.');
+      }
+
+      gameState.status = 'COMPLETED';
+      gameState.winnerId = isWhite ? match.blackPlayerId : match.whitePlayerId;
+      gameState.reason = 'RESIGNATION';
+
+      await this.matchService.updateMatchState(match.id, gameState);
+      this.server.to(match.id).emit('match_updated', { gameState, events: [{ type: 'RESIGN', payload: { loserId: userId } }] });
+
+      const matches = await this.matchService.getActiveMatches();
+      this.server.emit('lobby_matches', matches);
+    } catch (err: any) {
+      console.error(`❌ [GATEWAY ERROR] Falha ao processar desistência: ${err.message}`);
+    }
+  }
+
+  /**
+   * NOVO EVENTO: Cancelar partida
+   */
+  @SubscribeMessage('cancel_match')
+  async handleCancelMatch(@MessageBody() data: { matchId: string }) {
+    console.log(`❌ [GATEWAY] Cancelando partida: "${data.matchId}"`);
+    try {
+      const match = await this.matchService.findMatchById(data.matchId);
+      if (!match) return;
+
+      const gameState = match.gameState as any;
+      gameState.status = 'COMPLETED';
+      gameState.reason = 'CANCELLED';
+
+      await this.matchService.updateMatchState(match.id, gameState);
+      this.server.to(match.id).emit('match_updated', { gameState, events: [] });
+      
+      const matches = await this.matchService.getActiveMatches();
+      this.server.emit('lobby_matches', matches);
+    } catch (err: any) {
+      console.error(`❌ [GATEWAY ERROR] Falha ao cancelar partida: ${err.message}`);
     }
   }
 
@@ -604,8 +799,11 @@ export class MatchGateway {
     gameState.whiteMasterKing = null;
     gameState.blackMasterKing = null;
     gameState.turn = 'WHITE';
-    gameState.actionsRemaining = (match as any).maxActionsPerTurn || 3;
+    gameState.actionsRemaining = gameState.modality === 'CLASSIC' ? 1 : 0;
+    if (gameState.modality === 'DYNAMIC') gameState.activeDimensionIndex = 0;
     gameState.moveHistory = [];
+    gameState.halfMoveClock = 0;
+    gameState.stateHashes = {};
 
     // O método interno do seu service cuidará de realocar as peças clássicas nas dimensões ativas
     const resetedState = await this.matchService.executeGridReset(match.id, gameState);
@@ -623,25 +821,34 @@ export class MatchGateway {
       matchId: string;
       whitePlayerId: string | null;
       blackPlayerId: string | null;
-      maxActionsPerTurn: number;
+      modality: 'CLASSIC' | 'DYNAMIC';
       totalDimensions: number;
     }
   ) {
     console.log(`🌌 [GATEWAY] Colapsando e Configurando Novo Universo para a partida: "${data.matchId}"`);
+
+    const existingMatch = await this.matchService.findMatchById(data.matchId);
+    if (existingMatch && existingMatch.status !== 'WAITING_FOR_OPPONENT') {
+      console.warn(`⚠️ [GATEWAY] Tentativa de reconfigurar partida já em andamento rejeitada: ${data.matchId}`);
+      return;
+    }
 
     const BACK_ROW_TYPES = ['ROOK', 'KNIGHT', 'BISHOP', 'QUEEN', 'KING', 'BISHOP', 'KNIGHT', 'ROOK'];
 
     // 💡 NOTA TÁTICA DE INICIALIZAÇÃO: Toda partida recém-gerada obrigatoriamente inicia com as variáveis em NULL
     const newGameState = {
       turn: 'WHITE',
-      actionsRemaining: data.maxActionsPerTurn,
-      maxActionsPerTurn: data.maxActionsPerTurn,
+      modality: data.modality || 'CLASSIC',
+      activeDimensionIndex: data.modality === 'DYNAMIC' ? 0 : undefined,
+      actionsRemaining: data.modality === 'CLASSIC' ? 1 : 0,
       status: (!data.whitePlayerId || !data.blackPlayerId) ? 'WAITING_FOR_OPPONENT' : 'ONGOING',
       whitePlayerId: data.whitePlayerId,
       blackPlayerId: data.blackPlayerId,
       whiteMasterKing: null,
       blackMasterKing: null,
       moveHistory: [],
+      halfMoveClock: 0,
+      stateHashes: {},
       dimensions: Array.from({ length: data.totalDimensions }).map((_, z) => ({
         level: z,
         isActive: true,
@@ -672,6 +879,39 @@ export class MatchGateway {
     );
 
     this.server.to(data.matchId).emit('match_updated', { gameState: newGameState, events: [] });
+
+    const matches = await this.matchService.getActiveMatches();
+    this.server.emit('lobby_matches', matches);
+  }
+
+  /**
+   * NOVO EVENTO: Declaração de Empate por Material Insuficiente
+   */
+  @SubscribeMessage('draw_match')
+  async handleDraw(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { matchId: string; reason: string }
+  ) {
+    console.log(`🤝 [GATEWAY] Empate reportado na partida ${data.matchId}. Motivo: ${data.reason}`);
+    try {
+      const match = await this.matchService.findMatchById(data.matchId);
+      if (!match) throw new Error('Partida não encontrada.');
+
+      const gameState = match.gameState as any;
+      if (gameState.status === 'COMPLETED') return; // Evita processamento duplicado
+
+      gameState.status = 'COMPLETED';
+      gameState.winnerId = null;
+      gameState.reason = data.reason;
+
+      await this.matchService.updateMatchState(match.id, gameState);
+      this.server.to(match.id).emit('match_updated', { gameState, events: [{ type: 'DRAW', payload: { reason: data.reason } }] });
+
+      const matches = await this.matchService.getActiveMatches();
+      this.server.emit('lobby_matches', matches);
+    } catch (err: any) {
+      console.error(`❌ [GATEWAY ERROR] Falha ao processar Empate: ${err.message}`);
+    }
   }
 
   /**

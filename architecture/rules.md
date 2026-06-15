@@ -118,24 +118,27 @@ A malha do multiverso possui limites estritos de massa para duplicatas do mesmo 
 
 O motor autoritativo declarará o encerramento prematuro da partida em estado de empate sempre que o multiverso atingir um impasse matemático ou um loop lógico intransponível.
 
-### 7.1. Empates por Insuficiência Material
-Ocorre quando o inventário de peças ativas de um ou de ambos os jogadores é incapaz de criar uma rede de restrição geométrica para forçar o xeque-mate no Rei Master adversário.
+## 🤝 7. Condições de Empate Quântico (Draw)
 
-* **O Vazio Absoluto (Master vs. Master):** Quando restam apenas os dois Reis Masters em todo o multiverso. Como o raio de ação de ambos está limitado a 1 casa, eles não se podem atacar mutuamente sem violar a regra de autoxeque.
-* **A Caçada Inútil (Master + Peça Menor vs. Master):** Um dos lados possui apenas o Rei Master acompanhado de **1 Cavalo** ou **1 Bispo**, enquanto o adversário tem apenas o Rei Master. 
-  * *Justificativa Lógica:* Como o Rei Master isolado não possui outras peças aliadas no multiverso, a **Exceção de Morte Definitiva** o proíbe de realizar saltos dimensionais. A perseguição fica restrita a um único plano 2D, onde uma única peça menor é matematicamente incapaz de forçar o mate.
-* **A Marcha dos Zumbis (Master + Reis Secundários vs. Master):** Um dos lados possui o Rei Master e múltiplos Reis Secundários, e o adversário possui apenas o Rei Master.
-  * *Justificativa Lógica:* O **Paradoxo de Reis** restringe a ocupação máxima a **1 Rei por dimensão**. Consequentemente, o exército de Reis Secundários é forçado a permanecer disperso por fendas diferentes. É impossível que eles ingressem na mesma dimensão para unir forças e formar uma barreira de contenção contra o Master adversário.
+O motor autoritativo declarará o encerramento prematuro da partida em estado de empate sempre que o multiverso atingir um impasse matemático verificado ativamente pela engine.
+
+### 7.1. Empates por Insuficiência Material
+Ocorre quando o inventário de peças ativas de um ou de ambos os jogadores é incapaz de forçar um xeque-mate. 
+
+* **O Vazio Absoluto / A Marcha dos Zumbis:** Ocorre quando todas as peças restantes e efetivamente ativas de ambos os jogadores no multiverso são estritamente **Reis** (independentemente de quantos sejam ou se são Masters/Secundários). Como o Paradoxo de Reis impede o agrupamento de monarcas na mesma dimensão, e a velocidade de perseguição é igual para todos (1 casa), decreta-se o empate imediato.
+  * *Implementação:* Verificado no backend quando todo o array global resulta em `p.type === 'KING'`.
+* **A Caçada Inútil:** Ocorre quando um lado possui apenas o Rei (Master) isolado, e o adversário possui apenas o **Rei + 1 Cavalo** ou **1 Bispo**. Trata-se de uma vantagem material de exatas 2 peças contra 1 que é matematicamente incapaz de forçar um xeque-mate no plano 2D.
 
 ### 7.2. Empates por Bloqueio e Anomalias Estruturais
-Cenários gerados pelo isolamento permanente de forças nas fendas.
+Cenários gerados por limitações físicas e eventos destrutivos da malha 4D.
 
-* **Prisão Dimensional Intransponível (Bloqueio Físico):** Ocorre se um jogador detém material vencedor (ex: Rainha e Torre), mas este contingente está isolado dentro de uma dimensão inativa. Se o jogador tiver perdido todos os seus Reis ou se a referida dimensão tiver sofrido **Morte Definitiva** (zero peças aliadas sobreviventes), o exército fica congelado permanentemente. Se as forças restantes nas fendas utilizáveis forem insuficientes para o mate, decreta-se o empate.
-* **Aniquilação Mútua por Paradoxo:** Se um jogador efetuar um salto hiperdimensional desesperado que resulte no acionamento instantâneo de uma *Anomalia de Paradoxo* (Seção 6) e a destruição da peça remanescente deixar ambos os exércitos sem material mínimo de ataque, a partida é encerrada como empate por aniquilação.
+* **Prisão Dimensional Intransponível (Fratura do Multiverso):** Se um jogador possui material suficiente para dar xeque-mate (ex: Rainhas e Torres ativas), mas essas peças estão ilhadas em uma dimensão bloqueada por "Muros Quânticos" (dimensões com *Morte Definitiva*, onde aquele exército não possui mais nenhuma peça para usá-las como ponte interdimensional), essa frota inteira é ignorada pela engine. Se o material restante com acesso *efetivo* ao Rei Master inimigo se enquadrar nas regras de Insuficiência Material (7.1), decreta-se o empate por bloqueio físico irreversível.
+  * *Implementação:* Rastreado ativamente pela função `getEffectiveMatingMaterial`, que cessa a contabilização de peças ao esbarrar em uma barreira dimensional morta.
+* **Aniquilação Mútua por Paradoxo (Indireto):** Se um ou mais jogadores executam saltos dimensionais que acionam paradoxos na malha (excedendo os limites da Seção 6), e o evento de *COLLAPSE* (remoção da peça do grid) desintegra o material necessário para um mate viável, o motor recalcula a matriz final limpa. Se restarem apenas materiais insuficientes em campo livre, o jogo empata imediatamente após o processamento do paradoxo.
 
 ### 7.3. Empates Universais de Sistema
 Garantias lógicas codificadas para barrar partidas infinitas.
 
-* **Rei Afogado Quântico (Stalemate):** No turno do jogador ativo, o seu Rei Master **não se encontra em estado de xeque**, mas o utilizador não dispõe de **nenhum movimento legal possível** com nenhuma peça do seu exército em nenhuma dimensão ativa (peças bloqueadas por obstrução clássica, dimensões inacessíveis ou lances que resultariam em autoxeque do Master).
-* **O Paradoxo de Zeno (Tríplice Repetição):** Se a configuração exata do multiverso (coordenadas de todas as peças nas $N$ dimensões, status de ativação de cada grid, direitos de Roque Tradicional/Temporal e ponteiro do turno atual) se repetir de forma idêntica por **3 vezes** ao longo da partida.
-* **Exaustão de Energia (Regra dos 50 Movimentos):** Se forem executadas 50 jogadas consecutivas por ambos os lados sem que nenhum peão mude de fileira/dimensão e sem que ocorra nenhuma captura de peça ou eliminação por paradoxo.
+* **Rei Afogado Quântico (Stalemate):** No turno do jogador ativo, o seu Rei Master **não se encontra em estado de xeque**, mas o utilizador não dispõe de nenhum movimento legal possível com nenhuma peça.
+* **Paradoxo de Zeno (Tríplice Repetição):** Se a configuração exata do multiverso (posição 4D, dimensões, roques) se repetir de forma idêntica por 3 vezes.
+* **Exaustão de Energia:** Se forem executadas 50 jogadas consecutivas por ambos os lados sem que nenhum peão mude de casa/dimensão e sem que ocorra nenhuma captura/eliminação paradoxal.
