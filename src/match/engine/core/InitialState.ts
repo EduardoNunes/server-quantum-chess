@@ -11,9 +11,9 @@ const createPiece = (type: PieceType, color: Color, id: string, isMaster = false
 // Gera a fileira de peças pesadas (Torre, Cavalo, Bispo, Rainha, Rei)
 const generateBackRow = (color: Color, z: number): (Piece | null)[] => {
   const isWhite = color === 'WHITE';
-  // IMPORTANTE: No início, definimos a Dimensão 1 (z=0) como o Rei Master padrão. 
-  // O jogador poderá mudar isso na tela de Lobby em segredo antes do jogo começar.
-  const isMasterKing = (z === 0);
+  // IMPORTANTE: Os reis são gerados inicialmente de forma nêutra, sem Master.
+  // O jogador é OBRIGADO a consagrar um na Fase Inicial (Turno 0).
+  const isMasterKing = false;
 
   return [
     createPiece('ROOK', color, `R1-z${z}`),
