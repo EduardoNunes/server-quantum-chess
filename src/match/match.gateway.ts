@@ -817,6 +817,7 @@ export class MatchGateway {
    */
   @SubscribeMessage('configure_and_reset_match')
   async handleConfigureAndReset(
+    @ConnectedSocket() client: Socket,
     @MessageBody() data: {
       matchId: string;
       whitePlayerId: string | null;
@@ -877,6 +878,9 @@ export class MatchGateway {
       blackPlayerId,
       newGameState
     );
+
+    // Conecta o criador automaticamente à sala no backend para receber as atualizações sem gerar race conditions
+    client.join(data.matchId);
 
     this.server.to(data.matchId).emit('match_updated', { gameState: newGameState, events: [] });
 
