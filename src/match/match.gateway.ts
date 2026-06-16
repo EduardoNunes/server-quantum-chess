@@ -12,7 +12,11 @@ import { QuantumEngineService } from './engine/quantum-engine.service';
 
 @WebSocketGateway({
   cors: {
-    origin: 'http://localhost:5173', // Sem a barra no final para evitar conflitos estritos de CORS
+    origin: [
+      'http://localhost:5173',
+      'https://multimensional-chess.netlify.app',
+      'https://www.multimensional-chess.netlify.app'
+    ],
     credentials: true,
   },
   namespace: 'match'
@@ -106,7 +110,7 @@ export class MatchGateway {
       }
 
       const toDimActive = gameState.dimensions[data.to.z]?.grid.some((row: any[]) => row.some((p: any) => p && p.type === 'KING' && p.color === movingPiece.color));
-      
+
       const isPawnPromotionJump = movingPiece.type === 'PAWN' && data.to.z > data.from.z && (
         (movingPiece.color === 'WHITE' && data.to.y === 7) ||
         (movingPiece.color === 'BLACK' && data.to.y === 0)
@@ -137,7 +141,7 @@ export class MatchGateway {
         const dy = data.to.y - data.from.y;
         const dz = data.to.z - data.from.z;
         const stepZ = dz === 0 ? 0 : (dz > 0 ? 1 : -1);
-        
+
         if (stepZ !== 0) {
           const totalSteps = Math.max(Math.abs(dx), Math.abs(dy), Math.abs(dz));
           let cz = data.from.z + stepZ;
@@ -153,59 +157,59 @@ export class MatchGateway {
 
       // 2. Comparações permissivas para evitar falhas por tipagem (string vs number) no Socket
       const wMk = gameState.whiteMasterKing;
-      const matchesWhiteCoords = wMk && 
-        Number(wMk.x) === Number(data.from.x) && 
-        Number(wMk.y) === Number(data.from.y) && 
+      const matchesWhiteCoords = wMk &&
+        Number(wMk.x) === Number(data.from.x) &&
+        Number(wMk.y) === Number(data.from.y) &&
         Number(wMk.z) === Number(data.from.z);
 
       const bMk = gameState.blackMasterKing;
-      const matchesBlackCoords = bMk && 
-        Number(bMk.x) === Number(data.from.x) && 
-        Number(bMk.y) === Number(data.from.y) && 
+      const matchesBlackCoords = bMk &&
+        Number(bMk.x) === Number(data.from.x) &&
+        Number(bMk.y) === Number(data.from.y) &&
         Number(bMk.z) === Number(data.from.z);
 
       // 3. Validação Tripla Blindada: Checa a flag na peça local OU o ponteiro global OU a declaração do cliente
-      const isWhiteMasterMoving = movingPiece && movingPiece.type === 'KING' && movingPiece.color === 'WHITE' && 
+      const isWhiteMasterMoving = movingPiece && movingPiece.type === 'KING' && movingPiece.color === 'WHITE' &&
         (movingPiece.isMasterKing === true || matchesWhiteCoords || (data as any).piece?.isMasterKing === true);
 
-      const isBlackMasterMoving = movingPiece && movingPiece.type === 'KING' && movingPiece.color === 'BLACK' && 
+      const isBlackMasterMoving = movingPiece && movingPiece.type === 'KING' && movingPiece.color === 'BLACK' &&
         (movingPiece.isMasterKing === true || matchesBlackCoords || (data as any).piece?.isMasterKing === true);
 
       const targetPiece = gameState.dimensions[data.to.z]?.grid[data.to.y]?.[data.to.x];
       const isCastling = movingPiece && movingPiece.type === 'KING' && Math.abs(data.to.x - data.from.x) === 2 && data.from.y === data.to.y && data.from.z === data.to.z;
       const isDimensionalCastling = movingPiece?.type === 'KING' &&
-                                    targetPiece?.type === 'KING' &&
-                                    movingPiece.color === targetPiece.color &&
-                                    data.from.x === data.to.x &&
-                                    data.from.y === data.to.y &&
-                                    Math.abs(data.from.z - data.to.z) > 0;
+        targetPiece?.type === 'KING' &&
+        movingPiece.color === targetPiece.color &&
+        data.from.x === data.to.x &&
+        data.from.y === data.to.y &&
+        Math.abs(data.from.z - data.to.z) > 0;
 
       if (isDimensionalCastling && Math.abs(data.from.z - data.to.z) !== 1) {
         throw new Error('Roque Temporal inválido: O Rei só pode trocar de lugar com um Rei de uma dimensão vizinha.');
       }
 
-      const matchesWhiteCoordsTarget = wMk && 
-        Number(wMk.x) === Number(data.to.x) && 
-        Number(wMk.y) === Number(data.to.y) && 
+      const matchesWhiteCoordsTarget = wMk &&
+        Number(wMk.x) === Number(data.to.x) &&
+        Number(wMk.y) === Number(data.to.y) &&
         Number(wMk.z) === Number(data.to.z);
-      const isTargetWhiteMaster = targetPiece && targetPiece.type === 'KING' && targetPiece.color === 'WHITE' && 
+      const isTargetWhiteMaster = targetPiece && targetPiece.type === 'KING' && targetPiece.color === 'WHITE' &&
         (targetPiece.isMasterKing === true || matchesWhiteCoordsTarget || (data as any).targetPiece?.isMasterKing === true);
 
-      const matchesBlackCoordsTarget = bMk && 
-        Number(bMk.x) === Number(data.to.x) && 
-        Number(bMk.y) === Number(data.to.y) && 
+      const matchesBlackCoordsTarget = bMk &&
+        Number(bMk.x) === Number(data.to.x) &&
+        Number(bMk.y) === Number(data.to.y) &&
         Number(bMk.z) === Number(data.to.z);
-      const isTargetBlackMaster = targetPiece && targetPiece.type === 'KING' && targetPiece.color === 'BLACK' && 
+      const isTargetBlackMaster = targetPiece && targetPiece.type === 'KING' && targetPiece.color === 'BLACK' &&
         (targetPiece.isMasterKing === true || matchesBlackCoordsTarget || (data as any).targetPiece?.isMasterKing === true);
 
       // Identifica intenção de En Passant ANTES do movimento para remover a peça capturada
       const isEnPassant = movingPiece?.type === 'PAWN' &&
-                          targetPiece === null &&
-                          Math.abs(data.to.x - data.from.x) === 1 &&
-                          Math.abs(data.to.y - data.from.y) === 1;
-      const capturedEnPassantPiecePos = isEnPassant && gameState.moveHistory?.length > 0 
-          ? gameState.moveHistory[gameState.moveHistory.length - 1].to 
-          : null;
+        targetPiece === null &&
+        Math.abs(data.to.x - data.from.x) === 1 &&
+        Math.abs(data.to.y - data.from.y) === 1;
+      const capturedEnPassantPiecePos = isEnPassant && gameState.moveHistory?.length > 0
+        ? gameState.moveHistory[gameState.moveHistory.length - 1].to
+        : null;
 
       // Executa a movimentação delegando à Engine Service Autoritativa
       // NOTA: Para o Roque Dimensional, a engine irá processar como uma "captura" da peça aliada, que o gateway irá corrigir.
@@ -269,7 +273,7 @@ export class MatchGateway {
         const rookToX = isKingside ? 5 : 3;
         const z = data.to.z;
         const y = data.to.y;
-        
+
         const dim = result.updatedState.dimensions[z];
         const rookPiece = dim.grid[y][rookFromX];
         if (rookPiece && rookPiece.type === 'ROOK') {
@@ -321,7 +325,7 @@ export class MatchGateway {
       if ((movingPiece.type === 'KING' && data.from.z !== data.to.z && !isDimensionalCastling) || promotedToKing) {
         let residentKingPos: any = null;
         let residentKingPiece: any = null;
-        
+
         const dim = result.updatedState.dimensions[data.to.z];
         for (let y = 0; y < 8; y++) {
           for (let x = 0; x < 8; x++) {
@@ -337,7 +341,7 @@ export class MatchGateway {
         }
 
         if (residentKingPos && residentKingPiece) {
-          const isResidentMaster = residentKingPiece.isMasterKing === true || 
+          const isResidentMaster = residentKingPiece.isMasterKing === true ||
             (residentKingPiece.color === 'WHITE' && result.updatedState.whiteMasterKing?.x === residentKingPos.x && result.updatedState.whiteMasterKing?.y === residentKingPos.y && result.updatedState.whiteMasterKing?.z === residentKingPos.z) ||
             (residentKingPiece.color === 'BLACK' && result.updatedState.blackMasterKing?.x === residentKingPos.x && result.updatedState.blackMasterKing?.y === residentKingPos.y && result.updatedState.blackMasterKing?.z === residentKingPos.z);
 
@@ -355,7 +359,7 @@ export class MatchGateway {
 
       // PARADOXO DE RAINHAS
       if (movingPiece.type === 'QUEEN' && data.from.z !== data.to.z) {
-        let residentQueens: {pos: any, piece: any}[] = [];
+        let residentQueens: { pos: any, piece: any }[] = [];
         const dim = result.updatedState.dimensions[data.to.z];
         for (let y = 0; y < 8; y++) {
           for (let x = 0; x < 8; x++) {
@@ -377,7 +381,7 @@ export class MatchGateway {
               closestQueen = rq;
             }
           }
-          
+
           if (closestQueen) {
             result.updatedState.dimensions[data.to.z].grid[closestQueen.pos.y][closestQueen.pos.x] = null;
             (result.events as any[]).push({ type: 'COLLAPSE', payload: { piece: closestQueen.piece, coord: closestQueen.pos } });
@@ -387,7 +391,7 @@ export class MatchGateway {
 
       // PARADOXO DE TORRES
       if (movingPiece.type === 'ROOK' && data.from.z !== data.to.z) {
-        let residentRooks: {pos: any, piece: any}[] = [];
+        let residentRooks: { pos: any, piece: any }[] = [];
         const dim = result.updatedState.dimensions[data.to.z];
         for (let y = 0; y < 8; y++) {
           for (let x = 0; x < 8; x++) {
@@ -409,7 +413,7 @@ export class MatchGateway {
               closestRook = rr;
             }
           }
-          
+
           if (closestRook) {
             result.updatedState.dimensions[data.to.z].grid[closestRook.pos.y][closestRook.pos.x] = null;
             (result.events as any[]).push({ type: 'COLLAPSE', payload: { piece: closestRook.piece, coord: closestRook.pos } });
@@ -419,7 +423,7 @@ export class MatchGateway {
 
       // PARADOXO DE CAVALOS
       if (movingPiece.type === 'KNIGHT' && data.from.z !== data.to.z) {
-        let residentKnights: {pos: any, piece: any}[] = [];
+        let residentKnights: { pos: any, piece: any }[] = [];
         const dim = result.updatedState.dimensions[data.to.z];
         for (let y = 0; y < 8; y++) {
           for (let x = 0; x < 8; x++) {
@@ -441,7 +445,7 @@ export class MatchGateway {
               closestKnight = rk;
             }
           }
-          
+
           if (closestKnight) {
             result.updatedState.dimensions[data.to.z].grid[closestKnight.pos.y][closestKnight.pos.x] = null;
             (result.events as any[]).push({ type: 'COLLAPSE', payload: { piece: closestKnight.piece, coord: closestKnight.pos } });
@@ -451,7 +455,7 @@ export class MatchGateway {
 
       // PARADOXO DE PEÕES
       if (movingPiece.type === 'PAWN' && data.from.z !== data.to.z && !promotedToKing) {
-        let residentPawns: {pos: any, piece: any}[] = [];
+        let residentPawns: { pos: any, piece: any }[] = [];
         const dim = result.updatedState.dimensions[data.to.z];
         for (let y = 0; y < 8; y++) {
           for (let x = 0; x < 8; x++) {
@@ -473,7 +477,7 @@ export class MatchGateway {
               closestPawn = rp;
             }
           }
-          
+
           if (closestPawn) {
             result.updatedState.dimensions[data.to.z].grid[closestPawn.pos.y][closestPawn.pos.x] = null;
             (result.events as any[]).push({ type: 'COLLAPSE', payload: { piece: closestPawn.piece, coord: closestPawn.pos } });
@@ -484,7 +488,7 @@ export class MatchGateway {
       // PARADOXO DE BISPOS
       if (movingPiece.type === 'BISHOP' && data.from.z !== data.to.z) {
         const isTargetLightSquare = (data.to.x + data.to.y) % 2 === 0;
-        let residentBishops: {pos: any, piece: any}[] = [];
+        let residentBishops: { pos: any, piece: any }[] = [];
         const dim = result.updatedState.dimensions[data.to.z];
         for (let y = 0; y < 8; y++) {
           for (let x = 0; x < 8; x++) {
@@ -509,7 +513,7 @@ export class MatchGateway {
               closestBishop = rb;
             }
           }
-          
+
           if (closestBishop) {
             result.updatedState.dimensions[data.to.z].grid[closestBishop.pos.y][closestBishop.pos.x] = null;
             (result.events as any[]).push({ type: 'COLLAPSE', payload: { piece: closestBishop.piece, coord: closestBishop.pos } });
@@ -554,47 +558,47 @@ export class MatchGateway {
       // PROGRESSÃO DO TURNO (Dinâmico x Clássico)
       if (result.updatedState.status !== 'COMPLETED') {
         const isClassic = result.updatedState.modality === 'CLASSIC';
-        
+
         if (isClassic) {
-           result.updatedState.turn = originalTurn === 'WHITE' ? 'BLACK' : 'WHITE';
-           result.updatedState.actionsRemaining = 1;
+          result.updatedState.turn = originalTurn === 'WHITE' ? 'BLACK' : 'WHITE';
+          result.updatedState.actionsRemaining = 1;
         } else {
-           // DYNAMIC
-           let startZ = data.from.z + 1; // Próxima dimensão
-           let found = false;
-           let nextTurn = originalTurn;
+          // DYNAMIC
+          let startZ = data.from.z + 1; // Próxima dimensão
+          let found = false;
+          let nextTurn = originalTurn;
 
-           for (let z = startZ; z < result.updatedState.dimensions.length; z++) {
-             const dimActive = result.updatedState.dimensions[z].grid.some((row: any[]) => row.some((p: any) => p && p.type === 'KING' && p.color === nextTurn));
-             if (dimActive) {
-               result.updatedState.activeDimensionIndex = z;
-               found = true;
-               break;
-             }
-           }
+          for (let z = startZ; z < result.updatedState.dimensions.length; z++) {
+            const dimActive = result.updatedState.dimensions[z].grid.some((row: any[]) => row.some((p: any) => p && p.type === 'KING' && p.color === nextTurn));
+            if (dimActive) {
+              result.updatedState.activeDimensionIndex = z;
+              found = true;
+              break;
+            }
+          }
 
-           if (!found) {
-             nextTurn = originalTurn === 'WHITE' ? 'BLACK' : 'WHITE';
-             for (let z = 0; z < result.updatedState.dimensions.length; z++) {
-               const dimActive = result.updatedState.dimensions[z].grid.some((row: any[]) => row.some((p: any) => p && p.type === 'KING' && p.color === nextTurn));
-               if (dimActive) {
-                 result.updatedState.activeDimensionIndex = z;
-                 found = true;
-                 break;
-               }
-             }
-             if (!found) result.updatedState.activeDimensionIndex = 0; 
-           }
+          if (!found) {
+            nextTurn = originalTurn === 'WHITE' ? 'BLACK' : 'WHITE';
+            for (let z = 0; z < result.updatedState.dimensions.length; z++) {
+              const dimActive = result.updatedState.dimensions[z].grid.some((row: any[]) => row.some((p: any) => p && p.type === 'KING' && p.color === nextTurn));
+              if (dimActive) {
+                result.updatedState.activeDimensionIndex = z;
+                found = true;
+                break;
+              }
+            }
+            if (!found) result.updatedState.activeDimensionIndex = 0;
+          }
 
-           result.updatedState.turn = nextTurn;
+          result.updatedState.turn = nextTurn;
 
-           let actionsCount = 0;
-           const startActiveDimIndex = result.updatedState.activeDimensionIndex ?? 0;
-           for (let z = startActiveDimIndex; z < result.updatedState.dimensions.length; z++) {
-             const dimActive = result.updatedState.dimensions[z].grid.some((row: any[]) => row.some((p: any) => p && p.type === 'KING' && p.color === nextTurn));
-             if (dimActive) actionsCount++;
-           }
-           result.updatedState.actionsRemaining = actionsCount;
+          let actionsCount = 0;
+          const startActiveDimIndex = result.updatedState.activeDimensionIndex ?? 0;
+          for (let z = startActiveDimIndex; z < result.updatedState.dimensions.length; z++) {
+            const dimActive = result.updatedState.dimensions[z].grid.some((row: any[]) => row.some((p: any) => p && p.type === 'KING' && p.color === nextTurn));
+            if (dimActive) actionsCount++;
+          }
+          result.updatedState.actionsRemaining = actionsCount;
         }
       }
 
@@ -662,22 +666,22 @@ export class MatchGateway {
 
       if (gameState.whiteMasterKing && gameState.blackMasterKing) {
         if (gameState.modality === 'DYNAMIC') {
-           let found = false;
-           let actionsCount = 0;
-           for (let z = 0; z < gameState.dimensions.length; z++) {
-             const dimActive = gameState.dimensions[z].grid.some((row: any[]) => row.some((p: any) => p && p.type === 'KING' && p.color === 'WHITE'));
-             if (dimActive) {
-               if (!found) {
-                 gameState.activeDimensionIndex = z;
-                 found = true;
-               }
-               actionsCount++;
-             }
-           }
-           if (!found) gameState.activeDimensionIndex = 0;
-           gameState.actionsRemaining = actionsCount;
+          let found = false;
+          let actionsCount = 0;
+          for (let z = 0; z < gameState.dimensions.length; z++) {
+            const dimActive = gameState.dimensions[z].grid.some((row: any[]) => row.some((p: any) => p && p.type === 'KING' && p.color === 'WHITE'));
+            if (dimActive) {
+              if (!found) {
+                gameState.activeDimensionIndex = z;
+                found = true;
+              }
+              actionsCount++;
+            }
+          }
+          if (!found) gameState.activeDimensionIndex = 0;
+          gameState.actionsRemaining = actionsCount;
         } else {
-           gameState.actionsRemaining = 1;
+          gameState.actionsRemaining = 1;
         }
       }
 
@@ -775,7 +779,7 @@ export class MatchGateway {
 
       await this.matchService.updateMatchState(match.id, gameState);
       this.server.to(match.id).emit('match_updated', { gameState, events: [] });
-      
+
       const matches = await this.matchService.getActiveMatches();
       this.server.emit('lobby_matches', matches);
     } catch (err: any) {
