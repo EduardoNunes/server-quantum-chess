@@ -179,12 +179,12 @@ export class MatchService {
       grid: Array.from({ length: 8 }).map((_, y) =>
         Array.from({ length: 8 }).map((__, x) => {
           // Inicializa Peões nas fileiras 1 e 6
-          if (y === 1) return { id: `w-pawn-${x}-z${z}`, type: 'PAWN', color: 'WHITE' };
-          if (y === 6) return { id: `b-pawn-${x}-z${z}`, type: 'PAWN', color: 'BLACK' };
+          if (y === 1) return { id: `w-pawn-${x}-z${z}`, type: 'PAWN', color: 'WHITE', hasMoved: false };
+          if (y === 6) return { id: `b-pawn-${x}-z${z}`, type: 'PAWN', color: 'BLACK', hasMoved: false };
 
           // Inicializa peças maiores nas fileiras traseiras 0 e 7
-          if (y === 0) return { id: `w-${BACK_ROW_TYPES[x].toLowerCase()}-${x}-z${z}`, type: BACK_ROW_TYPES[x], color: 'WHITE' };
-          if (y === 7) return { id: `b-${BACK_ROW_TYPES[x].toLowerCase()}-${x}-z${z}`, type: BACK_ROW_TYPES[x], color: 'BLACK' };
+          if (y === 0) return { id: `w-${BACK_ROW_TYPES[x].toLowerCase()}-${x}-z${z}`, type: BACK_ROW_TYPES[x], color: 'WHITE', hasMoved: false, isMasterKing: BACK_ROW_TYPES[x] === 'KING' && currentDimensionsCount === 1 };
+          if (y === 7) return { id: `b-${BACK_ROW_TYPES[x].toLowerCase()}-${x}-z${z}`, type: BACK_ROW_TYPES[x], color: 'BLACK', hasMoved: false, isMasterKing: BACK_ROW_TYPES[x] === 'KING' && currentDimensionsCount === 1 };
 
           return null;
         }),
@@ -196,6 +196,13 @@ export class MatchService {
       ...baseCleanState,
       dimensions: freshDimensions,
     };
+    
+    // Auto-consagrar os Reis Master se houver apenas 1 dimensão (Xadrez Tradicional)
+    if (currentDimensionsCount === 1) {
+      resetedGameState.whiteMasterKing = { x: 4, y: 0, z: 0 };
+      resetedGameState.blackMasterKing = { x: 4, y: 7, z: 0 };
+      resetedGameState.actionsRemaining = 1;
+    }
 
     return resetedGameState;
   }

@@ -216,6 +216,9 @@ export class MatchGateway {
       // CORREÇÃO: Passando o ID da partida (string) e não o objeto match inteiro
       const result = await this.engineService.processMove(match.id, userId, data.from, data.to);
 
+      // INICIALIZA CEMITÉRIO MANTENDO O HISTÓRICO ATUAL (SE EXISTIR)
+      result.updatedState.eliminatedPieces = gameState.eliminatedPieces ? [...gameState.eliminatedPieces] : [];
+
       // GARANTIA DE STATUS: Atualiza o ponteiro de coordenada caso o Rei Master tenha se movido
       if (isDimensionalCastling && isTargetWhiteMaster) {
         result.updatedState.whiteMasterKing = data.from;
@@ -289,6 +292,8 @@ export class MatchGateway {
         if (targetPiece) {
           result.updatedState.dimensions[data.from.z].grid[data.from.y][data.from.x] = { ...targetPiece, hasMoved: true };
         }
+      } else if (targetPiece) {
+        result.updatedState.eliminatedPieces.push(targetPiece);
       }
 
       // Marca a peça movida como alterada para impedir que faça o Roque posteriormente
@@ -299,6 +304,10 @@ export class MatchGateway {
 
       // Remove a peça capturada do tabuleiro no caso de En Passant
       if (isEnPassant && capturedEnPassantPiecePos) {
+        const capturedPawn = gameState.dimensions[capturedEnPassantPiecePos.z].grid[capturedEnPassantPiecePos.y][capturedEnPassantPiecePos.x];
+        if (capturedPawn) {
+           result.updatedState.eliminatedPieces.push(capturedPawn);
+        }
         result.updatedState.dimensions[capturedEnPassantPiecePos.z].grid[capturedEnPassantPiecePos.y][capturedEnPassantPiecePos.x] = null;
       }
 
@@ -348,10 +357,14 @@ export class MatchGateway {
           if (isResidentMaster) {
             // O Rei Master é Soberano: O Rei (secundário) que saltou colapsa!
             result.updatedState.dimensions[data.to.z].grid[data.to.y][data.to.x] = null;
-            (result.events as any[]).push({ type: 'COLLAPSE', payload: { piece: pieceAtDest, coord: data.to } });
+            if (pieceAtDest) {
+              result.updatedState.eliminatedPieces.push(pieceAtDest);
+              (result.events as any[]).push({ type: 'COLLAPSE', payload: { piece: pieceAtDest, coord: data.to } });
+            }
           } else {
             // O Rei recém-chegado vence o conflito de continuidade: Rei residente colapsa
             result.updatedState.dimensions[data.to.z].grid[residentKingPos.y][residentKingPos.x] = null;
+            result.updatedState.eliminatedPieces.push(residentKingPiece);
             (result.events as any[]).push({ type: 'COLLAPSE', payload: { piece: residentKingPiece, coord: residentKingPos } });
           }
         }
@@ -384,6 +397,7 @@ export class MatchGateway {
           
           if (closestQueen) {
             result.updatedState.dimensions[data.to.z].grid[closestQueen.pos.y][closestQueen.pos.x] = null;
+            result.updatedState.eliminatedPieces.push(closestQueen.piece);
             (result.events as any[]).push({ type: 'COLLAPSE', payload: { piece: closestQueen.piece, coord: closestQueen.pos } });
           }
         }
@@ -416,6 +430,7 @@ export class MatchGateway {
           
           if (closestRook) {
             result.updatedState.dimensions[data.to.z].grid[closestRook.pos.y][closestRook.pos.x] = null;
+            result.updatedState.eliminatedPieces.push(closestRook.piece);
             (result.events as any[]).push({ type: 'COLLAPSE', payload: { piece: closestRook.piece, coord: closestRook.pos } });
           }
         }
@@ -448,6 +463,7 @@ export class MatchGateway {
           
           if (closestKnight) {
             result.updatedState.dimensions[data.to.z].grid[closestKnight.pos.y][closestKnight.pos.x] = null;
+            result.updatedState.eliminatedPieces.push(closestKnight.piece);
             (result.events as any[]).push({ type: 'COLLAPSE', payload: { piece: closestKnight.piece, coord: closestKnight.pos } });
           }
         }
@@ -480,6 +496,7 @@ export class MatchGateway {
           
           if (closestPawn) {
             result.updatedState.dimensions[data.to.z].grid[closestPawn.pos.y][closestPawn.pos.x] = null;
+            result.updatedState.eliminatedPieces.push(closestPawn.piece);
             (result.events as any[]).push({ type: 'COLLAPSE', payload: { piece: closestPawn.piece, coord: closestPawn.pos } });
           }
         }
@@ -516,6 +533,7 @@ export class MatchGateway {
           
           if (closestBishop) {
             result.updatedState.dimensions[data.to.z].grid[closestBishop.pos.y][closestBishop.pos.x] = null;
+            result.updatedState.eliminatedPieces.push(closestBishop.piece);
             (result.events as any[]).push({ type: 'COLLAPSE', payload: { piece: closestBishop.piece, coord: closestBishop.pos } });
           }
         }
@@ -798,14 +816,16 @@ export class MatchGateway {
     if (!match) return;
 
     const gameState = match.gameState as any;
+    const currentDimensionsCount = gameState.dimensions?.length || 4;
 
     // 💡 NOTA TÁTICA DE LIMPEZA: Força o retorno ao Turno 0 ao limpar os registros de Reis consagrados
-    gameState.whiteMasterKing = null;
-    gameState.blackMasterKing = null;
+    gameState.whiteMasterKing = currentDimensionsCount === 1 ? { x: 4, y: 0, z: 0 } : null;
+    gameState.blackMasterKing = currentDimensionsCount === 1 ? { x: 4, y: 7, z: 0 } : null;
     gameState.turn = 'WHITE';
-    gameState.actionsRemaining = gameState.modality === 'CLASSIC' ? 1 : 0;
+    gameState.actionsRemaining = gameState.modality === 'CLASSIC' ? 1 : (currentDimensionsCount === 1 ? 1 : 0);
     if (gameState.modality === 'DYNAMIC') gameState.activeDimensionIndex = 0;
     gameState.moveHistory = [];
+    gameState.eliminatedPieces = [];
     gameState.halfMoveClock = 0;
     gameState.stateHashes = {};
 
@@ -845,13 +865,14 @@ export class MatchGateway {
       turn: 'WHITE',
       modality: data.modality || 'CLASSIC',
       activeDimensionIndex: data.modality === 'DYNAMIC' ? 0 : undefined,
-      actionsRemaining: data.modality === 'CLASSIC' ? 1 : 0,
+      actionsRemaining: data.modality === 'CLASSIC' ? 1 : (data.totalDimensions === 1 ? 1 : 0),
       status: (!data.whitePlayerId || !data.blackPlayerId) ? 'WAITING_FOR_OPPONENT' : 'ONGOING',
       whitePlayerId: data.whitePlayerId,
       blackPlayerId: data.blackPlayerId,
-      whiteMasterKing: null,
-      blackMasterKing: null,
+      whiteMasterKing: data.totalDimensions === 1 ? { x: 4, y: 0, z: 0 } : null,
+      blackMasterKing: data.totalDimensions === 1 ? { x: 4, y: 7, z: 0 } : null,
       moveHistory: [],
+      eliminatedPieces: [],
       halfMoveClock: 0,
       stateHashes: {},
       dimensions: Array.from({ length: data.totalDimensions }).map((_, z) => ({
@@ -864,8 +885,8 @@ export class MatchGateway {
             if (y === 6) return { type: 'PAWN', color: 'BLACK', hasMoved: false };
 
             // Inicializa peças maiores nas fileiras traseiras 0 e 7
-            if (y === 0) return { type: BACK_ROW_TYPES[x], color: 'WHITE', hasMoved: false };
-            if (y === 7) return { type: BACK_ROW_TYPES[x], color: 'BLACK', hasMoved: false };
+            if (y === 0) return { type: BACK_ROW_TYPES[x], color: 'WHITE', hasMoved: false, isMasterKing: BACK_ROW_TYPES[x] === 'KING' && data.totalDimensions === 1 };
+            if (y === 7) return { type: BACK_ROW_TYPES[x], color: 'BLACK', hasMoved: false, isMasterKing: BACK_ROW_TYPES[x] === 'KING' && data.totalDimensions === 1 };
 
             return null;
           })

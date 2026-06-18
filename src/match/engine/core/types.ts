@@ -74,6 +74,7 @@ export interface GameState {
   status: 'ONGOING' | 'CHECKMATE' | 'STALEMATE' | 'COMPLETED' | 'WAITING_FOR_OPPONENT'; // Status atual da partida
   halfMoveClock: number; // Contador de meio-movimentos para a regra dos 50 movimentos
   stateHashes: string[]; // Array de hashes do estado para detectar repetições (Threefold Repetition)
+  eliminatedPieces: Piece[]; // Lista de peças capturadas para feedback visual e validação de empate por material insuficiente
 }
 
 /**
