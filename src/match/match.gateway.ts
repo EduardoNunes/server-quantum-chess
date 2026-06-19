@@ -27,7 +27,8 @@ export class MatchGateway {
   constructor(
     private readonly matchService: MatchService,
     private readonly engineService: QuantumEngineService
-  ) { }
+  ) {
+  }
 
   /**
    * Conecta o jogador à sala da partida e envia o estado inicial do tabuleiro
@@ -128,10 +129,28 @@ export class MatchGateway {
         }
       }
 
-      // 🚨 TRAVA DE DIMENSÃO DINÂMICA
+      // 🚨 TRAVA DE DIMENSÃO DINÂMICA (com exceção para xeque obrigatório)
       if (gameState.modality === 'DYNAMIC' && gameState.activeDimensionIndex !== undefined) {
-        if (data.from.z !== gameState.activeDimensionIndex) {
-          throw new Error(`Bloqueio Quântico: Na Modalidade Dinâmica, a sua jogada atual deve ser realizada obrigatoriamente na Dimensão ${gameState.activeDimensionIndex + 1}.`);
+        // Verifica se o Rei Master do jogador atual está em xeque
+        const masterKingPos = this.engineService.getMasterKingPosition(gameState, gameState.turn);
+        const checkData = this.engineService.getCheckData(gameState, gameState.turn);
+        const isMasterKingInCheck = checkData && masterKingPos && checkData.kingsInCheck.some(k => 
+          k.x === masterKingPos.x && k.y === masterKingPos.y && k.z === masterKingPos.z
+        );
+
+        if (isMasterKingInCheck) {
+          // Se há xeque: permite jogar em qualquer dimensão com Rei, mas a jogada DEVE tirar do xeque
+          const hasKingInDimension = gameState.dimensions[data.from.z]?.grid.some((row: any[]) => 
+            row.some((p: any) => p && p.type === 'KING' && p.color === gameState.turn)
+          );
+          if (!hasKingInDimension) {
+            throw new Error(`Bloqueio Quântico: Seu Rei Master está em xeque! Você só pode mover de dimensões que possuem um Rei. A dimensão ${data.from.z + 1} não possui Reis do seu exército.`);
+          }
+        } else {
+          // Se não há xeque: mantém a trava normal (deve jogar na dimensão ativa)
+          if (data.from.z !== gameState.activeDimensionIndex) {
+            throw new Error(`Bloqueio Quântico: Na Modalidade Dinâmica, a sua jogada atual deve ser realizada obrigatoriamente na Dimensão ${gameState.activeDimensionIndex + 1}.`);
+          }
         }
       }
 
@@ -573,47 +592,103 @@ export class MatchGateway {
       });
       result.updatedState.stateHashes[stateHash] = (result.updatedState.stateHashes[stateHash] || 0) + 1;
 
+      // 🚨 VALIDAÇÃO: Se havia xeque obrigatório no modo DYNAMIC, valida que foi resolvido
+      if (gameState.modality === 'DYNAMIC') {
+        const masterKingBefore = this.engineService.getMasterKingPosition(gameState, gameState.turn);
+        const checkDataBefore = this.engineService.getCheckData(gameState, gameState.turn);
+        const wasMasterKingInCheckBefore = checkDataBefore && masterKingBefore && checkDataBefore.kingsInCheck.some(k => 
+          k.x === masterKingBefore.x && k.y === masterKingBefore.y && k.z === masterKingBefore.z
+        );
+
+        if (wasMasterKingInCheckBefore) {
+          // Se havia xeque, valida que foi resolvido após o movimento
+          const masterKingAfter = this.engineService.getMasterKingPosition(result.updatedState, gameState.turn);
+          const checkDataAfter = this.engineService.getCheckData(result.updatedState, gameState.turn);
+          const isMasterKingInCheckAfter = checkDataAfter && masterKingAfter && checkDataAfter.kingsInCheck.some(k => 
+            k.x === masterKingAfter.x && k.y === masterKingAfter.y && k.z === masterKingAfter.z
+          );
+
+          if (isMasterKingInCheckAfter) {
+            throw new Error('Bloqueio Quântico: O movimento não resolve o xeque do seu Rei Master! Você é obrigado a sair do xeque quando está nessa situação.');
+          }
+        }
+      }
+
       // PROGRESSÃO DO TURNO (Dinâmico x Clássico)
+      // Primeiro, verificamos se o próximo jogador estará em xeque-mate para evitar cálculos desnecessários.
+      const nextTurnColor = result.updatedState.modality === 'CLASSIC' || (result.updatedState.modality === 'DYNAMIC' && (result.updatedState.actionsRemaining - 1 <= 0))
+        ? (originalTurn === 'WHITE' ? 'BLACK' : 'WHITE')
+        : originalTurn;
+
+      const checkDataForNextPlayer = this.engineService.getCheckData(result.updatedState, nextTurnColor);
+      const nextMasterKingPos = this.engineService.getMasterKingPosition(result.updatedState, nextTurnColor);
+      const isNextMasterKingInCheck = checkDataForNextPlayer && nextMasterKingPos && checkDataForNextPlayer.kingsInCheck.some(k => k.x === nextMasterKingPos.x && k.y === nextMasterKingPos.y && k.z === nextMasterKingPos.z);
+
       if (result.updatedState.status !== 'COMPLETED') {
         const isClassic = result.updatedState.modality === 'CLASSIC';
-        
+
         if (isClassic) {
-           result.updatedState.turn = originalTurn === 'WHITE' ? 'BLACK' : 'WHITE';
-           result.updatedState.actionsRemaining = 1;
+          result.updatedState.turn = originalTurn === 'WHITE' ? 'BLACK' : 'WHITE';
+          result.updatedState.actionsRemaining = 1;
         } else {
-           // DYNAMIC
-           let startZ = data.from.z + 1; // Próxima dimensão
-           let found = false;
-           let nextTurn = originalTurn;
+          // MODO DINÂMICO
+          result.updatedState.actionsRemaining = (result.updatedState.actionsRemaining || 1) - 1;
 
-           for (let z = startZ; z < result.updatedState.dimensions.length; z++) {
-             const dimActive = result.updatedState.dimensions[z].grid.some((row: any[]) => row.some((p: any) => p && p.type === 'KING' && p.color === nextTurn));
-             if (dimActive) {
-               result.updatedState.activeDimensionIndex = z;
-               found = true;
-               break;
-             }
-           }
+          let nextTurn = originalTurn;
+          let startZ = data.from.z + 1;
 
-           if (!found) {
-             nextTurn = originalTurn === 'WHITE' ? 'BLACK' : 'WHITE';
-             for (let z = 0; z < result.updatedState.dimensions.length; z++) {
-               const dimActive = result.updatedState.dimensions[z].grid.some((row: any[]) => row.some((p: any) => p && p.type === 'KING' && p.color === nextTurn));
-               if (dimActive) {
-                 result.updatedState.activeDimensionIndex = z;
-                 found = true;
-                 break;
-               }
-             }
-             if (!found) result.updatedState.activeDimensionIndex = 0; 
-           }
+          // Se o Rei Master do oponente estiver em xeque, a próxima jogada é dele, na dimensão do rei.
+          if (result.updatedState.actionsRemaining <= 0 && isNextMasterKingInCheck) {
+            nextTurn = nextTurnColor;
+            result.updatedState.activeDimensionIndex = nextMasterKingPos.z;
+            result.updatedState.forcedMasterKingSave = true; // Ativa a flag de salvamento forçado
+          } else {
+            result.updatedState.forcedMasterKingSave = false; // Garante que a flag seja desativada
+            let found = false;
 
-           result.updatedState.turn = nextTurn;
+            // Continua o turno do jogador atual se ele ainda tiver ações
+            if (result.updatedState.actionsRemaining > 0) {
+              for (let z = startZ; z < result.updatedState.dimensions.length; z++) {
+                const dimActive = result.updatedState.dimensions[z].grid.some((row: any[]) => row.some((p: any) => p && p.type === 'KING' && p.color === nextTurn));
+                if (dimActive) {
+                  result.updatedState.activeDimensionIndex = z;
+                  found = true;
+                  break;
+                }
+              }
+            }
 
+            // Se não encontrou mais dimensões para o jogador atual ou as ações acabaram, passa o turno
+            if (!found || result.updatedState.actionsRemaining <= 0) {
+              nextTurn = originalTurn === 'WHITE' ? 'BLACK' : 'WHITE';
+              // NOVO: Calcula a próxima dimensão válida excluindo a que foi jogada (se havia xeque)
+              const masterKingBefore = this.engineService.getMasterKingPosition(gameState, originalTurn);
+              const checkDataBefore = this.engineService.getCheckData(gameState, originalTurn);
+              const wasInCheckBefore = checkDataBefore && masterKingBefore && checkDataBefore.kingsInCheck.some(k => 
+                k.x === masterKingBefore.x && k.y === masterKingBefore.y && k.z === masterKingBefore.z
+              );
+              
+              let excludedDim: number | undefined = undefined;
+              if (wasInCheckBefore) {
+                excludedDim = data.from.z; // Exclui a dimensão que foi jogada se havia xeque
+              }
+              
+              const nextDim = this.engineService.getNextValidDimension(result.updatedState, nextTurn, excludedDim);
+              if (nextDim !== null) {
+                result.updatedState.activeDimensionIndex = nextDim;
+                found = true;
+              } else {
+                result.updatedState.activeDimensionIndex = 0;
+              }
+            }
+          }
+
+          result.updatedState.turn = nextTurn;
+
+           // Conta quantas dimensões têm um Rei do próximo jogador (total de ações disponíveis)
            let actionsCount = 0;
-           const startActiveDimIndex = result.updatedState.activeDimensionIndex ?? 0;
-           for (let z = startActiveDimIndex; z < result.updatedState.dimensions.length; z++) {
-             const dimActive = result.updatedState.dimensions[z].grid.some((row: any[]) => row.some((p: any) => p && p.type === 'KING' && p.color === nextTurn));
+           for (let z = 0; z < result.updatedState.dimensions.length; z++) {
+             const dimActive = result.updatedState.dimensions[z].isActive && result.updatedState.dimensions[z].grid.some((row: any[]) => row.some((p: any) => p && p.type === 'KING' && p.color === nextTurn));
              if (dimActive) actionsCount++;
            }
            result.updatedState.actionsRemaining = actionsCount;
@@ -822,7 +897,7 @@ export class MatchGateway {
     gameState.whiteMasterKing = currentDimensionsCount === 1 ? { x: 4, y: 0, z: 0 } : null;
     gameState.blackMasterKing = currentDimensionsCount === 1 ? { x: 4, y: 7, z: 0 } : null;
     gameState.turn = 'WHITE';
-    gameState.actionsRemaining = gameState.modality === 'CLASSIC' ? 1 : (currentDimensionsCount === 1 ? 1 : 0);
+    gameState.actionsRemaining = gameState.modality === 'CLASSIC' ? 1 : currentDimensionsCount;
     if (gameState.modality === 'DYNAMIC') gameState.activeDimensionIndex = 0;
     gameState.moveHistory = [];
     gameState.eliminatedPieces = [];
@@ -865,7 +940,7 @@ export class MatchGateway {
       turn: 'WHITE',
       modality: data.modality || 'CLASSIC',
       activeDimensionIndex: data.modality === 'DYNAMIC' ? 0 : undefined,
-      actionsRemaining: data.modality === 'CLASSIC' ? 1 : (data.totalDimensions === 1 ? 1 : 0),
+      actionsRemaining: data.modality === 'CLASSIC' ? 1 : data.totalDimensions,
       status: (!data.whitePlayerId || !data.blackPlayerId) ? 'WAITING_FOR_OPPONENT' : 'ONGOING',
       whitePlayerId: data.whitePlayerId,
       blackPlayerId: data.blackPlayerId,
