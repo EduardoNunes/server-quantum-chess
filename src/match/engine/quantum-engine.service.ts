@@ -1,18 +1,21 @@
 // src/match/engine/quantum-engine.service.ts
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, Inject, forwardRef } from '@nestjs/common'
 import { MatchService } from '../match.service';
 
 // Importações corretas da sua arquitetura existente:
 import { PawnValidator } from './core/validators/PawnValidator';
 import { RookValidator } from './core/validators/RookValidator';
-import { MoveIntent, GameState } from './core/types'; // Ajuste o path conforme seu projeto
+import { MoveIntent, GameState } from './core/types';
 import { BishopValidator } from './core/validators/BishopValidator';
 import { KingValidator, QueenValidator } from './core/validators/KingAndQueenValidator';
 import { KnightValidator } from './core/validators/KnightValidator';
 
 @Injectable()
 export class QuantumEngineService {
-  constructor(private readonly matchService: MatchService) { }
+  constructor(
+    @Inject(forwardRef(() => MatchService))
+    private readonly matchService: MatchService
+  ) { }
 
   /**
    * Busca a posição do Rei Master varrendo o tabuleiro
