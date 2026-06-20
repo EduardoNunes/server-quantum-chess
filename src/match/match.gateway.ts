@@ -391,13 +391,13 @@ export class MatchGateway {
         isActive: true,
         grid: Array.from({ length: 8 }).map((_, y) =>
           Array.from({ length: 8 }).map((__, x) => {
-            // Inicializa Peões nas fileiras 1 e 6
-            if (y === 1) return { type: 'PAWN', color: 'WHITE', hasMoved: false };
-            if (y === 6) return { type: 'PAWN', color: 'BLACK', hasMoved: false };
+            // Inicializa Peões nas fileiras 1 e 6 com ID único
+            if (y === 1) return { id: `pawn-white-z${z}-x${x}`, type: 'PAWN', color: 'WHITE', hasMoved: false };
+            if (y === 6) return { id: `pawn-black-z${z}-x${x}`, type: 'PAWN', color: 'BLACK', hasMoved: false };
 
-            // Inicializa peças maiores nas fileiras traseiras 0 e 7
-            if (y === 0) return { type: BACK_ROW_TYPES[x], color: 'WHITE', hasMoved: false, isMasterKing: BACK_ROW_TYPES[x] === 'KING' && data.totalDimensions === 1 };
-            if (y === 7) return { type: BACK_ROW_TYPES[x], color: 'BLACK', hasMoved: false, isMasterKing: BACK_ROW_TYPES[x] === 'KING' && data.totalDimensions === 1 };
+            // Inicializa peças maiores nas fileiras traseiras 0 e 7 com ID único
+            if (y === 0) return { id: `${BACK_ROW_TYPES[x].toLowerCase()}-white-z${z}-x${x}`, type: BACK_ROW_TYPES[x], color: 'WHITE', hasMoved: false, isMasterKing: BACK_ROW_TYPES[x] === 'KING' && data.totalDimensions === 1 };
+            if (y === 7) return { id: `${BACK_ROW_TYPES[x].toLowerCase()}-black-z${z}-x${x}`, type: BACK_ROW_TYPES[x], color: 'BLACK', hasMoved: false, isMasterKing: BACK_ROW_TYPES[x] === 'KING' && data.totalDimensions === 1 };
 
             return null;
           })
