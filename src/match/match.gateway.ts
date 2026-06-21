@@ -6,9 +6,10 @@ import {
   ConnectedSocket,
   MessageBody
 } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
+import { Namespace, Server, Socket } from 'socket.io';
 import { MatchService } from './match.service';
 import { QuantumEngineService } from './engine/quantum-engine.service';
+import { Match } from '@prisma/client';
 
 @WebSocketGateway({
   cors: {
@@ -22,7 +23,7 @@ import { QuantumEngineService } from './engine/quantum-engine.service';
   namespace: 'match'
 })
 export class MatchGateway {
-  @WebSocketServer() server!: Server;
+  @WebSocketServer() server!: Namespace;
 
   constructor(
     private readonly matchService: MatchService,
@@ -38,25 +39,49 @@ export class MatchGateway {
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { matchId: string }
   ) {
-    console.log(`📬 [GATEWAY] Usuário solicitou entrar na partida com ID: "${data.matchId}"`);
     client.join(data.matchId);
-
     const userId = client.handshake.auth.userId;
 
     try {
-      // Aciona o Service para Ingressar na partida, preencher a vaga livre e alterar status para ONGOING
       const match = await this.matchService.joinMatch(data.matchId, userId);
 
-      // Emite o estado atualizado PARA TODOS DA SALA (o que destrava o fluxo para o Turno 0 simultaneamente)
-      this.server.to(data.matchId).emit('match_updated', { gameState: match.gameState, events: [] });
+      // Proteção defensiva: garante que o estado vindo do banco seja tratado como objeto
+      const parsedGameState = typeof match.gameState === 'string'
+        ? JSON.parse(match.gameState)
+        : match.gameState;
 
-      // Atualiza o Lobby
+      // Injeta os nomes com segurança
+      const gameStateComNomes = {
+        ...(parsedGameState as any),
+        whitePlayerName: match.whitePlayer?.username || null,
+        blackPlayerName: match.blackPlayer?.username || null,
+      };
+
+      this.server.to(data.matchId).emit('match_updated', {
+        gameState: gameStateComNomes,
+        events: []
+      });
+
       const matches = await this.matchService.getActiveMatches();
       this.server.emit('lobby_matches', matches);
+      this.broadcastSpectatorCount(data.matchId);
+
     } catch (err: any) {
-      console.error(`❌ [GATEWAY ERROR] Erro no join_match: ${err.message}`);
       client.emit('move_rejected', { message: err.message });
     }
+  }
+
+  // Hook nativo de desconexão
+  handleDisconnect(client: Socket) {
+    // O Socket.io remove o cliente das salas automaticamente,
+    // mas precisamos saber qual sala ele estava para atualizar os outros
+    const rooms = Array.from(client.rooms);
+    rooms.forEach(roomId => {
+      // roomId é igual ao matchId, assumindo que você não usa o ID do socket como sala
+      if (roomId !== client.id) {
+        this.broadcastSpectatorCount(roomId);
+      }
+    });
   }
 
   /**
@@ -357,7 +382,9 @@ export class MatchGateway {
       matchId: string;
       whitePlayerId: string | null;
       blackPlayerId: string | null;
-      modality: 'CLASSIC' | 'DYNAMIC';
+      whitePlayerName?: string;
+      blackPlayerName?: string;
+      modality: 'TRADITIONAL' | 'CLASSIC' | 'DYNAMIC';
       totalDimensions: number;
     }
   ) {
@@ -475,5 +502,32 @@ export class MatchGateway {
     // inscritos na sala (matchId), EXCETO para o socket que enviou a mensagem original.
     // Isso é perfeito porque o nosso front-end já fez a atualização otimista localmente.
     client.to(data.matchId).emit('chat_message', data.message);
+  }
+
+  private async broadcastSpectatorCount(matchId: string) {
+    const room = this.server.adapter.rooms.get(matchId);
+    if (!room) return;
+
+    // A contagem total na sala (jogadores + espectadores)
+    const totalClients = room.size;
+
+    // Opcional: Se quiser a contagem EXATA de apenas espectadores, 
+    // você precisaria subtrair 2 (se a partida estiver em andamento e ambos conectados).
+    // Mas, manter "Espectadores + Jogadores" é o padrão comum em plataformas de xadrez.
+
+    this.server.to(matchId).emit('spectator_count_updated', { count: totalClients });
+  }
+
+  // Hook nativo de conexão
+  async handleConnection(client: Socket) {
+    const matchId = client.handshake.query.matchId as string;
+    if (matchId) {
+      client.join(matchId);
+
+      // Pequeno atraso para garantir que o adaptador do socket.io reconheça a sala
+      setTimeout(() => {
+        this.broadcastSpectatorCount(matchId);
+      }, 500);
+    }
   }
 }

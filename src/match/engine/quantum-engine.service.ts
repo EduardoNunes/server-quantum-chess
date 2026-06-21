@@ -47,7 +47,7 @@ export class QuantumEngineService {
       for (let z = 0; z < gameState.dimensions.length; z++) {
         const dim = gameState.dimensions[z];
         if (!dim.isActive) continue;
-        
+
         // Verifica se há algum Rei desta cor na dimensão
         for (let y = 0; y < 8; y++) {
           for (let x = 0; x < 8; x++) {
@@ -67,7 +67,7 @@ export class QuantumEngineService {
       const z = (excludeDimension + offset) % gameState.dimensions.length;
       const dim = gameState.dimensions[z];
       if (!dim.isActive) continue;
-      
+
       // Verifica se há algum Rei desta cor na dimensão
       for (let y = 0; y < 8; y++) {
         for (let x = 0; x < 8; x++) {
@@ -90,10 +90,10 @@ export class QuantumEngineService {
     piece: any,
     targetPos: { x: number; y: number; z: number }
   ): boolean {
-    const intent: MoveIntent = { 
-      from: attackerPos, 
-      to: targetPos, 
-      piece 
+    const intent: MoveIntent = {
+      from: attackerPos,
+      to: targetPos,
+      piece
     };
 
     try {
@@ -165,10 +165,10 @@ export class QuantumEngineService {
           if (piece && piece.color === opponentColor) {
             const from = { x, y, z };
             // Verifica se esta peça pode atacar algum dos reis
-            const canAttack = kingPositions.some(kingPos => 
+            const canAttack = kingPositions.some(kingPos =>
               this.canPieceAttackPosition(gameState, from, piece, kingPos)
             );
-            
+
             if (canAttack) {
               // Encontra qual(is) rei(s) esta peça pode atacar
               kingPositions.forEach(kingPos => {
@@ -264,5 +264,46 @@ export class QuantumEngineService {
     }
 
     return { updatedState: gameState, events: [{ type: 'MOVE', piece: piece.type, from, to }] };
+  }
+
+  /**
+   * Move a peça fisicamente na matriz em memória e retorna o estado atualizado.
+   * Não faz validações complexas, pois o simulateStateTransition já cuida disso.
+   */
+  /**
+   * Move a peça fisicamente na matriz em memória e retorna o estado atualizado.
+   */
+  async processMoveInMemory(state: any, from: any, to: any) {
+    const events: any[] = [];
+
+    // Captura segura usando encadeamento opcional
+    const movingPiece = state.dimensions?.[from.z]?.grid?.[from.y]?.[from.x];
+    const targetPiece = state.dimensions?.[to.z]?.grid?.[to.y]?.[to.x];
+
+    if (!movingPiece) {
+      return { updatedState: state, events };
+    }
+
+    // Se houver uma peça inimiga no destino (captura direta)
+    if (targetPiece && targetPiece.color !== movingPiece.color) {
+      events.push({
+        type: 'CAPTURE',
+        payload: { piece: targetPiece, coord: to }
+      });
+    }
+
+    // Executa a alteração na matriz de forma totalmente segura
+    if (state.dimensions?.[from.z]?.grid?.[from.y]) {
+      state.dimensions[from.z].grid[from.y][from.x] = null;
+    }
+
+    if (state.dimensions?.[to.z]?.grid?.[to.y]) {
+      state.dimensions[to.z].grid[to.y][to.x] = movingPiece;
+    }
+
+    return {
+      updatedState: state,
+      events
+    };
   }
 }

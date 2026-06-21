@@ -16,13 +16,15 @@ export type PieceType = 'PAWN' | 'ROOK' | 'KNIGHT' | 'BISHOP' | 'QUEEN' | 'KING'
  * Tipos de eventos gerados após a execução de um movimento bem-sucedido.
  * Usados pelo Frontend para disparar efeitos sonoros e animações na tela.
  */
-export type GameEventType = 
-  | 'COLLAPSE' 
-  | 'CAPTURE' 
-  | 'PROMOTION' 
-  | 'DIMENSION_REACTIVATED' 
-  | 'CHECK' 
-  | 'MATE';
+export type GameEventType =
+  | 'COLLAPSE'
+  | 'CAPTURE'
+  | 'PROMOTION'
+  | 'DIMENSION_REACTIVATED'
+  | 'CHECK'
+  | 'MATE'
+  | 'DRAW'
+  | 'RESIGN';
 
 /**
  * Vetor de Coordenadas Tridimensionais Espaciais (Posicionamento Global)
@@ -44,7 +46,7 @@ export interface Piece {
   type: PieceType;          // Tipo atual da peça (pode mudar dinamicamente na promoção)
   color: Color;             // Aliança da peça (Brancas ou Pretas)
   isMasterKing?: boolean;   // Flag oculta: TRUE se for o Rei Master (omitido para o oponente)
-  hasMoved?: boolean;      // Flag para validar movimentos especiais como o Roque
+  hasMoved?: boolean;       // Flag para validar movimentos especiais como o Roque
 }
 
 /**
@@ -68,14 +70,19 @@ export interface GameState {
   actionsRemaining: number; // Contador de ações globais restantes no turno atual (Máximo: 2)
   winnerId: string | null;  // ID do usuário vencedor se o Rei Master inimigo cair
   isCheck: boolean;         // TRUE se o Rei Master do jogador atual estiver em xeque
-  whiteMasterKing?: Vector3D; // Coordenadas do Rei Master Branco (se ativo)
-  blackMasterKing?: Vector3D; // Coordenadas do Rei Master Preto (se ativo)
+  whiteMasterKing?: Vector3D | null; // Coordenadas do Rei Master Branco (se ativo)
+  blackMasterKing?: Vector3D | null; // Coordenadas do Rei Master Preto (se ativo)
   moveHistory: MoveIntent[]; // Histórico completo de movimentos para validação de regras como En Passant
   status: 'ONGOING' | 'CHECKMATE' | 'STALEMATE' | 'COMPLETED' | 'WAITING_FOR_OPPONENT'; // Status atual da partida
   halfMoveClock: number; // Contador de meio-movimentos para a regra dos 50 movimentos
   stateHashes: string[]; // Array de hashes do estado para detectar repetições (Threefold Repetition)
   eliminatedPieces: Piece[]; // Lista de peças capturadas para feedback visual e validação de empate por material insuficiente
   forcedMasterKingSave?: boolean; // Flag para indicar se o jogador deve salvar seu Rei Master (apenas na modalidade dinâmica)
+
+  // --- ADIÇÕES DE GERENCIAMENTO DE JOGADORES ---
+  whitePlayerId: string | null; // Referência direta para simplificar validações no Frontend
+  blackPlayerId: string | null;
+  reason?: string; // Armazena motivos de encerramento, ex: 'RESIGNATION', 'CANCELLED', 'INSUFFICIENT_MATERIAL'
 }
 
 /**
@@ -85,6 +92,7 @@ export interface MoveIntent {
   piece: Piece;             // A cópia da peça que o jogador quer mover
   from: Vector3D;           // Coordenada de origem (x, y, z)
   to: Vector3D;             // Coordenada de destino pretendida (x, y, z)
+  promotionType?: PieceType;// Tipo de peça desejado na promoção (se aplicável)
 }
 
 /**
@@ -97,5 +105,39 @@ export interface GameEvent {
     coord?: Vector3D;       // Onde o evento aconteceu graficamente
     dimension?: number;     // Qual dimensão sofreu alteração de estado (se aplicável)
     newType?: PieceType;    // Para qual peça o peão se transformou na promoção
+    reason?: string;        // Motivo em eventos de empate/desistência
+    loserId?: string;       // ID de quem desistiu
   };
+}
+
+/**
+ * Representação mínima de um Usuário/Jogador do Banco de Dados
+ * (Usado para popular os nomes no Frontend caso seja feito o 'include')
+ */
+export interface UserPayload {
+  id: string;
+  name?: string;
+  username?: string;
+}
+
+export type MatchStatus = 'WAITING_FOR_OPPONENT' | 'ONGOING' | 'COMPLETED' | 'CANCELLED';
+
+/**
+ * Tipagem estrita da Entidade de Partida gerada pelo Prisma/Banco de Dados.
+ * Resolve o erro ts(2551) de propriedades inexistentes.
+ */
+export interface Match {
+  id: string;
+  whitePlayerId: string | null;
+  blackPlayerId: string | null;
+  status: MatchStatus;
+  winnerId: string | null;
+  gameState: GameState | any; // 'any' permite flexibilidade com o JsonValue do Prisma, mas na aplicação deve ser tratado como GameState
+  moveHistory: string[];
+  createdAt: Date;
+  updatedAt: Date;
+
+  // Propriedades Relacionais Opcionais (Preenchidas apenas se o Prisma usar 'include: { whitePlayer: true }')
+  whitePlayer?: UserPayload | null;
+  blackPlayer?: UserPayload | null;
 }

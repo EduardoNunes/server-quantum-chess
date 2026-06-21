@@ -68,5 +68,7 @@ export const generateInitialState = (): GameState => {
     halfMoveClock: 0,
     stateHashes: [],
     eliminatedPieces: [],
+    whitePlayerId: null,
+    blackPlayerId: null,
   };
 };
