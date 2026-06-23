@@ -59,6 +59,7 @@ export class MatchGateway {
 
       this.server.to(data.matchId).emit('match_updated', {
         gameState: gameStateComNomes,
+        moveHistory: match.moveHistory,
         events: []
       });
 
@@ -98,11 +99,13 @@ export class MatchGateway {
     try {
       // 1. Delega TODA a regra de negócio para o Service
       const result = await this.matchService.executePlayerMove(userId, data);
+      const updatedMatch = await this.matchService.findMatchById(data.matchId);
 
       // 2. Emite o novo estado para a sala
       this.server.to(data.matchId).emit('match_updated', {
         gameState: result.gameState,
-        events: result.events
+        events: result.events,
+        moveHistory: updatedMatch?.moveHistory
       });
 
     } catch (err: any) {
@@ -184,7 +187,7 @@ export class MatchGateway {
 
       // Atualiza o banco e repassa o estado modificado para travar/destravar a tela no front
       await this.matchService.updateMatchState(match.id, gameState);
-      this.server.to(match.id).emit('match_updated', { gameState, events: [] });
+      this.server.to(match.id).emit('match_updated', { gameState, events: [], moveHistory: match.moveHistory });
 
     } catch (err: any) {
       console.error(`❌ [GATEWAY ERROR] Falha na consagração: ${err.message}`);
@@ -212,7 +215,7 @@ export class MatchGateway {
       gameState.winnerId = data.winnerId;
 
       await this.matchService.updateMatchState(match.id, gameState);
-      this.server.to(match.id).emit('match_updated', { gameState, events: [{ type: 'MATE', payload: {} }] });
+      this.server.to(match.id).emit('match_updated', { gameState, events: [{ type: 'MATE', payload: {} }], moveHistory: match.moveHistory });
 
       const matches = await this.matchService.getActiveMatches();
       this.server.emit('lobby_matches', matches);
@@ -251,7 +254,7 @@ export class MatchGateway {
       gameState.reason = 'RESIGNATION';
 
       await this.matchService.updateMatchState(match.id, gameState);
-      this.server.to(match.id).emit('match_updated', { gameState, events: [{ type: 'RESIGN', payload: { loserId: userId } }] });
+      this.server.to(match.id).emit('match_updated', { gameState, events: [{ type: 'RESIGN', payload: { loserId: userId } }], moveHistory: match.moveHistory });
 
       const matches = await this.matchService.getActiveMatches();
       this.server.emit('lobby_matches', matches);
@@ -275,7 +278,7 @@ export class MatchGateway {
       gameState.reason = 'CANCELLED';
 
       await this.matchService.updateMatchState(match.id, gameState);
-      this.server.to(match.id).emit('match_updated', { gameState, events: [] });
+      this.server.to(match.id).emit('match_updated', { gameState, events: [], moveHistory: match.moveHistory });
 
       const matches = await this.matchService.getActiveMatches();
       this.server.emit('lobby_matches', matches);
@@ -349,7 +352,7 @@ export class MatchGateway {
     await this.matchService.updateMatchState(match.id, resetedState);
 
     // 3. Emite o novo estado para todos e limpa os alertas de reset no frontend
-    this.server.to(match.id).emit('match_updated', { gameState: resetedState, events: [] });
+    this.server.to(match.id).emit('match_updated', { gameState: resetedState, events: [], moveHistory: resetedState.moveHistory });
     this.server.to(match.id).emit('reset_completed');
   }
 
@@ -445,7 +448,7 @@ export class MatchGateway {
     // Conecta o criador automaticamente à sala no backend para receber as atualizações sem gerar race conditions
     client.join(data.matchId);
 
-    this.server.to(data.matchId).emit('match_updated', { gameState: newGameState, events: [] });
+    this.server.to(data.matchId).emit('match_updated', { gameState: newGameState, events: [], moveHistory: newGameState.moveHistory });
 
     const matches = await this.matchService.getActiveMatches();
     this.server.emit('lobby_matches', matches);
@@ -472,7 +475,7 @@ export class MatchGateway {
       gameState.reason = data.reason;
 
       await this.matchService.updateMatchState(match.id, gameState);
-      this.server.to(match.id).emit('match_updated', { gameState, events: [{ type: 'DRAW', payload: { reason: data.reason } }] });
+      this.server.to(match.id).emit('match_updated', { gameState, events: [{ type: 'DRAW', payload: { reason: data.reason } }], moveHistory: match.moveHistory });
 
       const matches = await this.matchService.getActiveMatches();
       this.server.emit('lobby_matches', matches);
@@ -529,5 +532,13 @@ export class MatchGateway {
         this.broadcastSpectatorCount(matchId);
       }, 500);
     }
+  }
+
+  @SubscribeMessage('request_analysis_data')
+  async handleRequestAnalysis(@MessageBody() data: { matchId: string }) {
+    // Gera todos os estados de uma vez só
+    const historyStates = await this.matchService.generateReplayStates(data.matchId);
+    // Envia para o front-end
+    this.server.to(data.matchId).emit('analysis_data', historyStates);
   }
 }

@@ -77,18 +77,18 @@ export class MatchService {
   /**
    * Atualiza o estado do jogo (gameState) no banco de dados
    */
-  async updateMatchState(matchId: string, updatedState: any) {
+  async updateMatchState(matchId: string, updatedState: any, moveHistory?: any[]) {
     return this.prisma.match.update({
-      where: {
-        id: matchId,
-      },
+      where: { id: matchId },
       data: {
         gameState: updatedState,
         status: updatedState.status,
         winnerId: updatedState.winnerId,
+        // Se moveHistory for uma relação, usamos 'set' para substituir o array inteiro
+        moveHistory: moveHistory ? { set: moveHistory } : undefined
       },
     });
-  }
+  } 
 
   /**
    * NOVO MÉTODO: Vincula os IDs dos jogadores sorteados e o gameState inicial no banco (GameSetup)
